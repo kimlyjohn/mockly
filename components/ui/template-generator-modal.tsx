@@ -146,6 +146,7 @@ export function TemplateGeneratorModal({
       allowNonJsonInput: true,
       topicContext,
       minQuestionCountPerType: minimumPerType,
+      aiDecides,
     });
     await navigator.clipboard.writeText(prompt);
     setFeedback("AI prompt copied. Paste it in ChatGPT/Claude/Gemini.");

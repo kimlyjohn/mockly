@@ -15,7 +15,7 @@ export default function AttemptDetailLoading() {
       <div className="grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-4">
-            <Skeleton className="h-8 w-[26rem]" />
+            <Skeleton className="h-8 w-104" />
             <Skeleton className="mt-2 h-4 w-40" />
             <div className="mt-3 flex gap-2">
               <Skeleton className="h-9 w-24 rounded-xl" />

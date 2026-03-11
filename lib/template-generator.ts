@@ -216,6 +216,14 @@ export const generateTemplateExam = (
 export const stringifyTemplateExam = (exam: TemplateExamOutput): string =>
   `${JSON.stringify(exam, null, 2)}\n`;
 
+const formatTypeForDisplay = (type: TemplateTypeSelection): string => {
+  if (type === "identification_no_choices")
+    return "identification (without choices)";
+  if (type === "identification_with_choices")
+    return "identification (with choices)";
+  return type;
+};
+
 export const buildAiExamPrompt = (
   exam: TemplateExamOutput,
   options?: {
@@ -223,18 +231,64 @@ export const buildAiExamPrompt = (
     allowNonJsonInput?: boolean;
     topicContext?: string;
     minQuestionCountPerType?: TemplateTypeMinimums;
+    aiDecides?: boolean;
   },
 ): string => {
   const requireSources = options?.requireSources ?? true;
   const allowNonJsonInput = options?.allowNonJsonInput ?? true;
   const topicContext = options?.topicContext?.trim();
   const minQuestionCountPerType = options?.minQuestionCountPerType ?? {};
+  const aiDecides = options?.aiDecides ?? false;
   const minTypeLines = Object.entries(minQuestionCountPerType)
     .filter((entry): entry is [TemplateTypeSelection, number] => {
       const [, count] = entry;
       return Number.isFinite(count) && count > 0;
     })
     .map(([type, count]) => `- include at least ${count} ${type} question(s)`);
+
+  const selectedPrefs = exam.generatorContext.selectedTypePreferences;
+
+  // When AI decides freely, it can produce any question type so all validation
+  // rules apply. When strict, only rules relevant to selected types are needed.
+  const hasType = (...types: TemplateTypeSelection[]) =>
+    aiDecides ? true : types.some((t) => selectedPrefs.includes(t));
+
+  const typeLines = aiDecides
+    ? [
+        "All supported types may be used: true_false, multiple_choice, identification, matching, enumeration.",
+        `Preferred types (if topic allows): ${selectedPrefs.map(formatTypeForDisplay).join(", ") || "any"}.`,
+      ]
+    : selectedPrefs.map((t) => `- ${formatTypeForDisplay(t)}`);
+
+  const validationRules: string[] = [];
+  if (
+    hasType(
+      "multiple_choice",
+      "identification_with_choices",
+      "identification_no_choices",
+    )
+  ) {
+    validationRules.push(
+      "- multiple_choice and/or identification(hasChoices=true): correctAnswer must exactly match one option value.",
+    );
+  }
+  if (hasType("matching")) {
+    validationRules.push(
+      "- matching: options.left and options.right must be plain string arrays; correctAnswer maps each left string to a right string.",
+    );
+  }
+  if (hasType("enumeration")) {
+    validationRules.push(
+      "- enumeration: correctAnswer must be string[]; orderedAnswer may be true or false.",
+    );
+  }
+  validationRules.push(
+    "- Explanations should be concise, factual, and directly tied to why the answer is correct.",
+  );
+
+  const typeSectionHeader = aiDecides
+    ? "QUESTION TYPES (AI (YOU) DECIDES MIX AND COUNT)"
+    : "QUESTION TYPES TO USE (STRICT — DO NOT ADD OTHERS)";
 
   return [
     "ROLE",
@@ -250,18 +304,11 @@ export const buildAiExamPrompt = (
     "4. metadata.totalQuestions MUST equal questions.length.",
     "5. All question ids must be unique and stable.",
     "",
-    "SUPPORTED QUESTION TYPES",
-    "- true_false",
-    "- multiple_choice",
-    "- identification",
-    "- matching",
-    "- enumeration",
+    typeSectionHeader,
+    ...typeLines,
     "",
     "VALIDATION RULES (HARD REQUIREMENTS)",
-    "- multiple_choice and identification(hasChoices=true): correctAnswer must exactly match one option value.",
-    "- matching: options.left and options.right must be plain string arrays; correctAnswer maps each left string to a right string.",
-    "- enumeration: correctAnswer must be string[]; orderedAnswer may be true or false.",
-    "- Explanations should be concise, factual, and directly tied to why the answer is correct.",
+    ...validationRules,
     ...(minTypeLines.length > 0
       ? ["", "MINIMUM QUESTION COUNT CONSTRAINTS BY TYPE", ...minTypeLines]
       : []),
@@ -275,9 +322,7 @@ export const buildAiExamPrompt = (
     allowNonJsonInput
       ? "If user input is plain text/topic notes (not JSON), infer requirements and still produce a complete valid JSON exam."
       : "If user input is incomplete, still produce the best valid JSON exam possible.",
-    topicContext
-      ? `Context to incorporate:\n${topicContext}`
-      : "No extra context provided.",
+    ...(topicContext ? ["", "TOPIC CONTEXT", topicContext] : []),
     "",
     "QUALITY CHECKLIST BEFORE FINAL OUTPUT",
     "- No TODO placeholders remain.",
