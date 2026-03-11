@@ -362,6 +362,20 @@ export function AttemptRunner({ attemptId }: AttemptRunnerProps) {
     return <Card>Attempt unavailable.</Card>;
   }
 
+  if (submitting) {
+    return (
+      <Card className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <div>
+          <p className="text-lg font-semibold">Submitting your exam…</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Please wait while your answers are being saved.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
   if (attemptStatus === "submitted") {
     if (!activeGrade) {
       return <Card>Loading results...</Card>;
@@ -394,12 +408,6 @@ export function AttemptRunner({ attemptId }: AttemptRunnerProps) {
 
   return (
     <section className="space-y-4">
-      {submitting && (
-        <p className="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-          Submitting your exam...
-        </p>
-      )}
-
       <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
         <span>Time elapsed: {toTime(elapsedSeconds)}</span>
         {saving && (
