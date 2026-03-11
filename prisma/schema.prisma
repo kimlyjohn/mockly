@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum QuestionType {
+  TRUE_FALSE
+  MULTIPLE_CHOICE
+  IDENTIFICATION
+  MATCHING
+  ENUMERATION
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  ABANDONED
+}
+
+enum AttemptMode {
+  NORMAL
+  RETRY_INCORRECT
+}
+
+enum ThemeSetting {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+model Exam {
+  id               String     @id @default(cuid())
+  title            String
+  description      String
+  subject          String?
+  totalQuestions   Int
+  passingScore     Float
+  shuffleQuestions Boolean    @default(false)
+  shuffleOptions   Boolean    @default(false)
+  sourceHash       String     @unique
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  questions        Question[]
+  attempts         Attempt[]
+  imports          ExamImport[]
+
+  @@index([createdAt])
+}
+
+model Question {
+  id              String           @id @default(cuid())
+  examId          String
+  exam            Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  questionId      String
+  orderIndex      Int
+  type            QuestionType
+  prompt          String
+  explanation     String
+  hasChoices      Boolean?
+  boolAnswer      Boolean?
+  textAnswer      String?
+  orderedAnswer   Boolean?
+  options         QuestionOption[]
+  matchingPairs   MatchingPair[]
+  enumerationRows EnumerationItem[]
+  answers         AttemptAnswer[]
+
+  @@unique([examId, questionId])
+  @@index([examId, orderIndex])
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  value      String
+  orderIndex Int
+
+  @@index([questionId, orderIndex])
+}
+
+model MatchingPair {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  leftValue  String
+  rightValue String
+  orderIndex Int
+
+  @@index([questionId, orderIndex])
+}
+
+model EnumerationItem {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  value      String
+  orderIndex Int
+
+  @@index([questionId, orderIndex])
+}
+
+model Attempt {
+  id                   String          @id @default(cuid())
+  examId               String
+  exam                 Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  status               AttemptStatus   @default(IN_PROGRESS)
+  mode                 AttemptMode     @default(NORMAL)
+  sourceAttemptId      String?
+  sourceAttempt        Attempt?        @relation("RetryChain", fields: [sourceAttemptId], references: [id], onDelete: SetNull)
+  retryAttempts        Attempt[]       @relation("RetryChain")
+  currentQuestionIndex Int             @default(0)
+  elapsedSeconds       Int             @default(0)
+  startedAt            DateTime        @default(now())
+  submittedAt          DateTime?
+  totalScore           Float?
+  maxScore             Float?
+  percentage           Float?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  answers              AttemptAnswer[]
+  flags                AttemptFlag[]
+
+  @@index([examId, createdAt])
+  @@index([sourceAttemptId])
+}
+
+model AttemptAnswer {
+  id         String             @id @default(cuid())
+  attemptId  String
+  attempt    Attempt            @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  textValue  String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  entries    AttemptAnswerItem[]
+
+  @@unique([attemptId, questionId])
+  @@index([questionId])
+}
+
+model AttemptAnswerItem {
+  id              String        @id @default(cuid())
+  attemptAnswerId String
+  attemptAnswer   AttemptAnswer @relation(fields: [attemptAnswerId], references: [id], onDelete: Cascade)
+  itemKey         String?
+  itemValue       String
+  orderIndex      Int
+
+  @@index([attemptAnswerId, orderIndex])
+}
+
+model AttemptFlag {
+  id         String   @id @default(cuid())
+  attemptId  String
+  attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId String
+  createdAt  DateTime @default(now())
+
+  @@unique([attemptId, questionId])
+}
+
+model AppSettings {
+  id                      Int          @id @default(1)
+  theme                   ThemeSetting @default(SYSTEM)
+  autosaveSeconds         Int          @default(20)
+  enableRetryIncorrect    Boolean      @default(true)
+  enableKeyboardShortcuts Boolean      @default(true)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+}
+
+model ExamImport {
+  id         String   @id @default(cuid())
+  examId     String
+  exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  filename   String?
+  source     String
+  rawSize    Int?
+  importedAt DateTime @default(now())
+
+  @@index([importedAt])
+}
