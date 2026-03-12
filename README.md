@@ -3,7 +3,7 @@
 
 ## What is Mockly?
 
-Mockly is a web application designed to turn your study materials into interactive mock exams. 
+Mockly is a web application designed to turn your study materials into interactive mock exams.
 
 Instead of dealing with expensive LLM API integrations, rate limits, or slow loading times, Mockly handles the AI generation externally. It generates a highly optimized system prompt that you paste into your favorite AI (ChatGPT, Gemini, Claude) along with your study notes. The AI spits out a strictly formatted JSON file, which Mockly then parses, saves to a database, and renders into a fully interactive exam environment.
 
@@ -13,7 +13,7 @@ It was built primarily as a pragmatic study tool for students to practice realis
 
 1. **Build the Prompt:** Use Mockly's UI to select question types (Multiple Choice, True/False, Identification, etc.), passing score, and question counts. Mockly generates a strict prompt.
 2. **Generate Externally:** Copy the prompt, paste it into an LLM alongside your PDFs/notes, and copy the resulting JSON.
-3. **Import:** Paste the JSON into Mockly. 
+3. **Import:** Paste the JSON into Mockly.
 4. **Practice & Review:** Take the exam in a focused UI. Once submitted, Mockly grades it (handling fuzzy logic for text inputs) and displays pre-generated explanations for why answers were right or wrong.
 
 ## Main Features
@@ -26,6 +26,7 @@ It was built primarily as a pragmatic study tool for students to practice realis
 ## Developer Setup
 
 ### Prerequisites
+
 - Node.js 18+
 - npm
 - PostgreSQL
@@ -33,6 +34,7 @@ It was built primarily as a pragmatic study tool for students to practice realis
 ### Run Locally
 
 1. Install dependencies:
+
 ```bash
 npm install
 
@@ -41,14 +43,22 @@ npm install
 2. Configure environment variables in `.env`:
 
 ```bash
-DATABASE_URL="your_postgres_connection_string"
+DATABASE_URL="your_runtime_database_url"
+DIRECT_URL="your_direct_database_url"
 
 ```
+
+For Supabase:
+
+- `DATABASE_URL` should use the pooled connection (`:6543` with `?pgbouncer=true`) for app runtime, especially on Vercel/serverless.
+- `DIRECT_URL` should use the direct connection (`:5432`) for Prisma migrations and schema operations.
+
+If your password contains special characters (e.g. `@`, `#`, `%`), URL-encode them in both URLs.
 
 3. Apply database migrations:
 
 ```bash
-npx prisma migrate dev
+DIRECT_URL="your_direct_database_url" npx prisma migrate dev
 
 ```
 
@@ -63,18 +73,18 @@ Open http://localhost:3000 to view the app.
 
 ### Useful Commands
 
-* `npm run dev` - start local dev server
-* `npm run build` - build for production
-* `npm run start` - run production build
-* `npm run lint` - run ESLint
-* `npm run test:unit` - run unit tests
-* `npm run db:test` - check database connectivity
-* `npm run db:studio` - open Prisma Studio to view the database UI
+- `npm run dev` - start local dev server
+- `npm run build` - build for production
+- `npm run start` - run production build
+- `npm run lint` - run ESLint
+- `npm run test:unit` - run unit tests
+- `npm run db:test` - check database connectivity
+- `npm run db:studio` - open Prisma Studio to view the database UI
 
 ### Project Architecture
 
-* `app/(dashboard)` - Main application views (Library, Attempts, Import)
-* `app/api` - Backend API routes for database interactions
-* `components` - Modular UI components (Exam Player, Question Renderers)
-* `lib` - Core domain logic, JSON validation (Zod), and grading utilities
-* `prisma` - Database schema and migrations
+- `app/(dashboard)` - Main application views (Library, Attempts, Import)
+- `app/api` - Backend API routes for database interactions
+- `components` - Modular UI components (Exam Player, Question Renderers)
+- `lib` - Core domain logic, JSON validation (Zod), and grading utilities
+- `prisma` - Database schema and migrations
