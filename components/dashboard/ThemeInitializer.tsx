@@ -2,18 +2,28 @@
 
 import { useEffect } from "react";
 
+const getCookieTheme = (): "system" | "light" | "dark" | null => {
+  const match = document.cookie.match(/(?:^|; )mockly-theme=([^;]+)/);
+  const value = match ? decodeURIComponent(match[1]) : null;
+  return value === "light" || value === "dark" || value === "system"
+    ? value
+    : null;
+};
+
 const applyTheme = (theme: "system" | "light" | "dark") => {
+  document.cookie = `mockly-theme=${theme}; path=/; max-age=31536000; samesite=lax`;
+
   if (theme === "system") {
     const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)",
     ).matches;
-    document.documentElement.setAttribute(
-      "data-theme",
-      prefersDark ? "dark" : "light",
-    );
+    const resolvedTheme = prefersDark ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", resolvedTheme);
+    document.documentElement.style.colorScheme = resolvedTheme;
     return;
   }
   document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.style.colorScheme = theme;
 };
 
 export function ThemeInitializer() {
@@ -22,8 +32,15 @@ export function ThemeInitializer() {
 
     try {
       const stored = localStorage.getItem("mockly-theme");
-      if (stored === "light" || stored === "dark" || stored === "system") {
-        applyTheme(stored);
+      const cookieTheme = getCookieTheme();
+      const initialTheme =
+        stored === "light" || stored === "dark" || stored === "system"
+          ? stored
+          : cookieTheme;
+
+      if (initialTheme) {
+        localStorage.setItem("mockly-theme", initialTheme);
+        applyTheme(initialTheme);
       }
     } catch {
       // Ignore local storage access issues.

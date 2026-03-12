@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope, Sora, Geist } from "next/font/google";
+import { cookies } from "next/headers";
 
 import { ThemeInitializer } from "@/components/dashboard/ThemeInitializer";
 
@@ -33,22 +34,35 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const cookieTheme = cookieStore.get("mockly-theme")?.value;
+  const initialTheme =
+    cookieTheme === "light" || cookieTheme === "dark" ? cookieTheme : undefined;
+
   const themeBootScript = `(() => {
     try {
+      const cookieMatch = document.cookie.match(/(?:^|; )mockly-theme=([^;]+)/);
+      const cookieTheme = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
       const stored = localStorage.getItem("mockly-theme");
-      const theme = stored === "light" || stored === "dark" || stored === "system"
-        ? stored
+      const preferred = cookieTheme === "light" || cookieTheme === "dark" || cookieTheme === "system"
+        ? cookieTheme
+        : stored;
+      const theme = preferred === "light" || preferred === "dark" || preferred === "system"
+        ? preferred
         : "system";
       if (theme === "system") {
         const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
+        const resolved = prefersDark ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", resolved);
+        document.documentElement.style.colorScheme = resolved;
       } else {
         document.documentElement.setAttribute("data-theme", theme);
+        document.documentElement.style.colorScheme = theme;
       }
     } catch {}
   })();`;
@@ -57,6 +71,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn("font-sans", geist.variable)}
+      data-theme={initialTheme}
       suppressHydrationWarning
     >
       <head>

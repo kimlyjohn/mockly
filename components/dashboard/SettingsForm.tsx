@@ -29,18 +29,19 @@ interface SettingsFormProps {
 
 const applyTheme = (theme: ThemeMode) => {
   localStorage.setItem("mockly-theme", theme);
+  document.cookie = `mockly-theme=${theme}; path=/; max-age=31536000; samesite=lax`;
 
   if (theme === "system") {
     const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)",
     ).matches;
-    document.documentElement.setAttribute(
-      "data-theme",
-      prefersDark ? "dark" : "light",
-    );
+    const resolvedTheme = prefersDark ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", resolvedTheme);
+    document.documentElement.style.colorScheme = resolvedTheme;
     return;
   }
   document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.style.colorScheme = theme;
 };
 
 export function SettingsForm({ initial }: SettingsFormProps) {

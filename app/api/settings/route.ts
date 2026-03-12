@@ -18,13 +18,23 @@ const normalizeTheme = (theme: ThemeSetting) => themeFromDb(theme);
 export async function GET() {
   const settings = await ensureSettings();
 
-  return ok({
+  const response = ok({
     theme: normalizeTheme(settings.theme),
     autosaveSeconds: settings.autosaveSeconds,
     enableRetryIncorrect: settings.enableRetryIncorrect,
     enableKeyboardShortcuts: settings.enableKeyboardShortcuts,
     updatedAt: settings.updatedAt,
   });
+
+  response.cookies.set({
+    name: "mockly-theme",
+    value: normalizeTheme(settings.theme),
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+
+  return response;
 }
 
 export async function PATCH(request: Request) {
@@ -62,11 +72,21 @@ export async function PATCH(request: Request) {
     },
   });
 
-  return ok({
+  const response = ok({
     theme: normalizeTheme(updated.theme),
     autosaveSeconds: updated.autosaveSeconds,
     enableRetryIncorrect: updated.enableRetryIncorrect,
     enableKeyboardShortcuts: updated.enableKeyboardShortcuts,
     updatedAt: updated.updatedAt,
   });
+
+  response.cookies.set({
+    name: "mockly-theme",
+    value: normalizeTheme(updated.theme),
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+
+  return response;
 }
