@@ -2,26 +2,24 @@
 
 import { useEffect } from "react";
 
-const getCookieTheme = (): "system" | "light" | "dark" | null => {
+const getCookieTheme = (): "light" | "dark" | null => {
   try {
     const match = document.cookie.match(/(?:^|; )mockly-theme=([^;]+)/);
     const value = match ? decodeURIComponent(match[1]) : null;
-    return value === "light" || value === "dark" || value === "system"
-      ? value
-      : null;
+    if (value === "light" || value === "dark") {
+      return value;
+    }
+    if (value === "system") {
+      return "light";
+    }
+    return null;
   } catch {
     return null;
   }
 };
 
-const applyTheme = (theme: "system" | "light" | "dark") => {
+const applyTheme = (theme: "light" | "dark") => {
   document.cookie = `mockly-theme=${theme}; path=/; max-age=31536000; samesite=lax`;
-
-  if (theme === "system") {
-    document.documentElement.removeAttribute("data-theme");
-    document.documentElement.style.colorScheme = "light dark";
-    return;
-  }
 
   document.documentElement.setAttribute("data-theme", theme);
   document.documentElement.style.colorScheme = theme;
@@ -33,13 +31,18 @@ export function ThemeInitializer() {
       const stored = localStorage.getItem("mockly-theme");
       const cookieTheme = getCookieTheme();
       const initialTheme =
-        stored === "light" || stored === "dark" || stored === "system"
+        stored === "light" || stored === "dark"
           ? stored
-          : cookieTheme;
+          : stored === "system"
+            ? "light"
+            : cookieTheme;
 
       if (initialTheme) {
         localStorage.setItem("mockly-theme", initialTheme);
         applyTheme(initialTheme);
+      } else {
+        localStorage.setItem("mockly-theme", "light");
+        applyTheme("light");
       }
     } catch {
       // Ignore local storage access issues.
@@ -54,17 +57,13 @@ export function ThemeInitializer() {
 
         const payload = (await response.json()) as {
           data?: {
-            theme?: "system" | "light" | "dark";
+            theme?: "light" | "dark";
           };
         };
 
-        const theme = payload.data?.theme ?? "system";
+        const theme = payload.data?.theme ?? "light";
         localStorage.setItem("mockly-theme", theme);
         applyTheme(theme);
-
-        if (theme === "system") {
-          document.documentElement.style.colorScheme = "light dark";
-        }
       } catch {
         // Ignore initialization failures and fallback to media query.
       }

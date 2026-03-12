@@ -28,7 +28,7 @@ export const saveAttemptProgressSchema = z.object({
 });
 
 export const updateSettingsSchema = z.object({
-  theme: z.enum(["system", "light", "dark"]).optional(),
+  theme: z.enum(["light", "dark"]).optional(),
   autosaveSeconds: z.number().int().min(5).max(300).optional(),
   enableRetryIncorrect: z.boolean().optional(),
   enableKeyboardShortcuts: z.boolean().optional(),

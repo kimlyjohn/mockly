@@ -41,8 +41,7 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const cookieTheme = cookieStore.get("mockly-theme")?.value;
-  const initialTheme =
-    cookieTheme === "light" || cookieTheme === "dark" ? cookieTheme : undefined;
+  const initialTheme = cookieTheme === "dark" ? "dark" : "light";
 
   return (
     <html
@@ -50,27 +49,13 @@ export default async function RootLayout({
       className={cn("font-sans", geist.variable)}
       data-theme={initialTheme}
       style={{
-        colorScheme:
-          initialTheme === "dark"
-            ? "dark"
-            : initialTheme === "light"
-              ? "light"
-              : "light dark",
+        colorScheme: initialTheme,
       }}
       suppressHydrationWarning
     >
       <head>
-        <meta
-          name="color-scheme"
-          content={
-            initialTheme === "dark"
-              ? "dark"
-              : initialTheme === "light"
-                ? "light"
-                : "light dark"
-          }
-        />
-        <style>{`html{background:#f7fbfa;}@media (prefers-color-scheme: dark){html:not([data-theme]){background:#050a12;}}`}</style>
+        <meta name="color-scheme" content={initialTheme} />
+        <style>{`html{background:#f7fbfa;}html[data-theme="dark"]{background:#050a12;}`}</style>
       </head>
       <body
         className={`${displayFont.variable} ${bodyFont.variable} antialiased`}

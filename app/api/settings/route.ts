@@ -65,7 +65,7 @@ export async function PATCH(request: Request) {
     },
     create: {
       id: 1,
-      theme: data.theme ? mapThemeSetting(data.theme) : ThemeSetting.SYSTEM,
+      theme: data.theme ? mapThemeSetting(data.theme) : ThemeSetting.LIGHT,
       autosaveSeconds: data.autosaveSeconds ?? 20,
       enableRetryIncorrect: data.enableRetryIncorrect ?? true,
       enableKeyboardShortcuts: data.enableKeyboardShortcuts ?? true,

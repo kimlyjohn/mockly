@@ -354,19 +354,17 @@ export const mapThemeSetting = (
   if (theme === "dark") {
     return ThemeSetting.DARK;
   }
-  return ThemeSetting.SYSTEM;
+  return ThemeSetting.LIGHT;
 };
 
-export const themeFromDb = (
-  theme: ThemeSetting,
-): "system" | "light" | "dark" => {
+export const themeFromDb = (theme: ThemeSetting): "light" | "dark" => {
   if (theme === ThemeSetting.LIGHT) {
     return "light";
   }
   if (theme === ThemeSetting.DARK) {
     return "dark";
   }
-  return "system";
+  return "light";
 };
 
 export const statusFromDb = (

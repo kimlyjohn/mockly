@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type ThemeMode = "system" | "light" | "dark";
+type ThemeMode = "light" | "dark";
 
 interface SettingsFormProps {
   initial: {
@@ -30,12 +30,6 @@ interface SettingsFormProps {
 const applyTheme = (theme: ThemeMode) => {
   localStorage.setItem("mockly-theme", theme);
   document.cookie = `mockly-theme=${theme}; path=/; max-age=31536000; samesite=lax`;
-
-  if (theme === "system") {
-    document.documentElement.removeAttribute("data-theme");
-    document.documentElement.style.colorScheme = "light dark";
-    return;
-  }
 
   document.documentElement.setAttribute("data-theme", theme);
   document.documentElement.style.colorScheme = theme;
@@ -206,7 +200,6 @@ export function SettingsForm({ initial }: SettingsFormProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="system">System</SelectItem>
             <SelectItem value="light">Light</SelectItem>
             <SelectItem value="dark">Dark</SelectItem>
           </SelectContent>
