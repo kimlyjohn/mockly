@@ -169,10 +169,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                 </div>
               </div>
 
-              <div className="pointer-events-auto relative z-30 flex min-w-0 w-full items-center justify-end gap-2 sm:w-auto sm:max-w-72">
+              <div className="pointer-events-auto relative z-30 flex w-full items-center justify-end gap-2">
                 <Badge
                   variant="outline"
-                  className="min-w-0 flex-1 truncate px-2 py-0 text-left text-[10px] uppercase tracking-[0.08em] sm:max-w-64 sm:flex-none"
+                  className="max-w-full truncate px-2 py-0 text-left text-[10px] uppercase tracking-[0.08em]"
                   title={exam.subject ?? "General"}
                 >
                   {exam.subject ?? "General"}
