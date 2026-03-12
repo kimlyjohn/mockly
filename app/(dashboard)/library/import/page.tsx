@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { ExamImportPanel } from "@/components/dashboard/ExamImportPanel";
 
@@ -19,8 +20,9 @@ export default function ImportExamPage() {
         </div>
         <Link
           href="/library"
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
         >
+          <ArrowLeft className="h-4 w-4" />
           Back To Library
         </Link>
       </header>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 
@@ -68,7 +68,13 @@ export function StartAttemptButton({
       <Button
         onClick={start}
         disabled={busy}
-        leftIcon={busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        leftIcon={
+          busy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )
+        }
       >
         {busy
           ? "Starting..."

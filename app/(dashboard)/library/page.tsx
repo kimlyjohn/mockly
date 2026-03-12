@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FileUp } from "lucide-react";
 
 import { ExamLibraryItemMenu } from "@/components/dashboard/ExamLibraryItemMenu";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             </p>
           </div>
           <Link href="/library/import" className={buttonVariants()}>
+            <FileUp className="h-4 w-4" />
             Import Exams
           </Link>
         </div>
@@ -134,15 +136,15 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
 
       <div className="grid gap-3">
         {exams.length === 0 && (
-          <p className="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
             No exams yet. Open the import page to add your first JSON exam.
-          </p>
+          </div>
         )}
 
         {exams.map((exam) => (
           <article
             key={exam.id}
-            className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-800"
+            className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-800"
           >
             <Link
               href={`/library/${exam.id}`}
@@ -167,8 +169,14 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                 </div>
               </div>
 
-              <div className="pointer-events-auto relative z-30 flex items-start gap-2">
-                <Badge variant="outline">{exam.subject ?? "General"}</Badge>
+              <div className="pointer-events-auto relative z-30 flex min-w-0 w-full items-center justify-end gap-2 sm:w-auto sm:max-w-72">
+                <Badge
+                  variant="outline"
+                  className="min-w-0 flex-1 truncate px-2 py-0 text-left text-[10px] uppercase tracking-[0.08em] sm:max-w-64 sm:flex-none"
+                  title={exam.subject ?? "General"}
+                >
+                  {exam.subject ?? "General"}
+                </Badge>
                 <ExamLibraryItemMenu
                   examId={exam.id}
                   title={exam.title}

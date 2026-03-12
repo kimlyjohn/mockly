@@ -102,6 +102,81 @@ export const listAttempts = async () => {
   }));
 };
 
+export type AttemptFilterStatus = "in_progress" | "submitted" | "abandoned";
+
+export const listAttemptsPaginated = async (
+  page = 1,
+  pageSize = 8,
+  status?: AttemptFilterStatus,
+) => {
+  const safePageSize = Math.max(1, Math.min(100, pageSize));
+  const safePage = Math.max(1, page);
+  const skip = (safePage - 1) * safePageSize;
+
+  const statusWhere =
+    status === "in_progress"
+      ? AttemptStatus.IN_PROGRESS
+      : status === "submitted"
+        ? AttemptStatus.SUBMITTED
+        : status === "abandoned"
+          ? AttemptStatus.ABANDONED
+          : undefined;
+
+  const where = statusWhere ? { status: statusWhere } : undefined;
+
+  const [items, total] = await Promise.all([
+    db.attempt.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: safePageSize,
+      include: {
+        exam: {
+          select: {
+            id: true,
+            title: true,
+            subject: true,
+            passingScore: true,
+          },
+        },
+        _count: {
+          select: {
+            answers: true,
+            flags: true,
+          },
+        },
+      },
+    }),
+    db.attempt.count({ where }),
+  ]);
+
+  return {
+    items: items.map((attempt) => ({
+      id: attempt.id,
+      examId: attempt.examId,
+      examTitle: attempt.exam.title,
+      examSubject: attempt.exam.subject,
+      examPassingScore: attempt.exam.passingScore,
+      status: statusFromDb(attempt.status),
+      mode: attempt.mode,
+      currentQuestionIndex: attempt.currentQuestionIndex,
+      elapsedSeconds: attempt.elapsedSeconds,
+      totalScore: attempt.totalScore,
+      maxScore: attempt.maxScore,
+      percentage: attempt.percentage,
+      answersCount: attempt._count.answers,
+      flagsCount: attempt._count.flags,
+      createdAt: attempt.createdAt,
+      updatedAt: attempt.updatedAt,
+      submittedAt: attempt.submittedAt,
+    })),
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.max(1, Math.ceil(total / safePageSize)),
+  };
+};
+
 export const getAttemptDetails = async (attemptId: string) => {
   return db.attempt.findUnique({
     where: { id: attemptId },
