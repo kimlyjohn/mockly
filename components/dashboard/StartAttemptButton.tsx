@@ -12,6 +12,17 @@ interface StartAttemptButtonProps {
   retryIncorrect?: boolean;
 }
 
+interface StartAttemptPayload {
+  data?: {
+    attempt?: {
+      id: string;
+    };
+  };
+  error?: {
+    message?: string;
+  };
+}
+
 export function StartAttemptButton({
   examId,
   sourceAttemptId,
@@ -37,19 +48,16 @@ export function StartAttemptButton({
         }),
       });
 
-      const payload = (await response.json()) as {
-        data?: {
-          attempt?: {
-            id: string;
-          };
-        };
-        error?: {
-          message?: string;
-        };
-      };
+      const rawBody = await response.text();
+      const payload: StartAttemptPayload | null = rawBody
+        ? ((JSON.parse(rawBody) as StartAttemptPayload) ?? null)
+        : null;
 
-      if (!response.ok || !payload.data?.attempt?.id) {
-        throw new Error(payload.error?.message ?? "Failed to start attempt.");
+      if (!response.ok || !payload?.data?.attempt?.id) {
+        throw new Error(
+          payload?.error?.message ??
+            `Failed to start attempt (HTTP ${response.status}).`,
+        );
       }
 
       router.push(`/attempts/${payload.data.attempt.id}`);

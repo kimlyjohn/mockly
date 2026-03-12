@@ -41,48 +41,57 @@ export async function GET(_: Request, context: RouteContext) {
 }
 
 export async function POST(request: Request, context: RouteContext) {
-  const { examId } = await context.params;
+  try {
+    const { examId } = await context.params;
 
-  const exam = await db.exam.findUnique({
-    where: { id: examId },
-    include: examInclude,
-  });
+    const exam = await db.exam.findUnique({
+      where: { id: examId },
+      include: examInclude,
+    });
 
-  if (!exam) {
-    return fail("Exam not found.", 404);
-  }
+    if (!exam) {
+      return fail("Exam not found.", 404);
+    }
 
-  const raw = await readJson<unknown>(request);
-  const parsed = startAttemptRequestSchema.safeParse(raw);
-  if (!parsed.success) {
-    return zodFail(parsed.error);
-  }
+    const raw = await readJson<unknown>(request);
+    const parsed = startAttemptRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      return zodFail(parsed.error);
+    }
 
-  const mode = mapAttemptMode(parsed.data.mode);
+    const mode = mapAttemptMode(parsed.data.mode);
 
-  const created = await db.attempt.create({
-    data: {
-      examId,
-      mode,
-      sourceAttemptId: parsed.data.sourceAttemptId,
-    },
-    include: attemptInclude,
-  });
-
-  const mappedExam = mapExamFromDb(exam);
-
-  return ok(
-    {
-      attempt: {
-        id: created.id,
-        status: statusFromDb(created.status),
-        mode: created.mode,
-        currentQuestionIndex: created.currentQuestionIndex,
-        elapsedSeconds: created.elapsedSeconds,
-        flaggedQuestionIds: created.flags.map((flag) => flag.questionId),
+    const created = await db.attempt.create({
+      data: {
+        examId,
+        mode,
+        sourceAttemptId: parsed.data.sourceAttemptId,
       },
-      exam: mappedExam,
-    },
-    201,
-  );
+      include: attemptInclude,
+    });
+
+    const mappedExam = mapExamFromDb(exam);
+
+    return ok(
+      {
+        attempt: {
+          id: created.id,
+          status: statusFromDb(created.status),
+          mode: created.mode,
+          currentQuestionIndex: created.currentQuestionIndex,
+          elapsedSeconds: created.elapsedSeconds,
+          flaggedQuestionIds: created.flags.map((flag) => flag.questionId),
+        },
+        exam: mappedExam,
+      },
+      201,
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unexpected server error while starting attempt.";
+
+    return fail(message, 500);
+  }
 }
