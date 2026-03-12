@@ -1,84 +1,80 @@
-# Mockly
+<h1 align="center">Mockly</h1>
+<p align="center">A "Bring-Your-Own-AI" mock exam generator and player.</p>
 
-Mockly is a modern mock exam platform for importing custom exam JSON, taking timed attempts, and reviewing results with clear feedback.
+## What is Mockly?
 
-It is designed for fast exam prep workflows with a polished dashboard, strong validation, and a complete attempt lifecycle.
+Mockly is a web application designed to turn your study materials into interactive mock exams. 
 
-## What This Project Does
+Instead of dealing with expensive LLM API integrations, rate limits, or slow loading times, Mockly handles the AI generation externally. It generates a highly optimized system prompt that you paste into your favorite AI (ChatGPT, Gemini, Claude) along with your study notes. The AI spits out a strictly formatted JSON file, which Mockly then parses, saves to a database, and renders into a fully interactive exam environment.
 
-- Imports and validates exam JSON files.
-- Organizes exams in a library with pagination and management actions.
-- Runs full attempt sessions with autosave, keyboard shortcuts, question flags, and submission flow.
-- Grades attempts and shows detailed review per question.
-- Supports app settings (theme, autosave interval, retry behavior, keyboard shortcuts).
-- Includes backup export/import for exam and settings data portability.
+It was built primarily as a pragmatic study tool for students to practice realistic test pressure and review their mistakes without manually writing out flashcards or questionnaires.
 
-## Creating Exam JSON with AI
+## The Core Workflow
 
-Mockly includes an in-app AI Prompt Builder to help you generate valid exam JSON quickly.
+1. **Build the Prompt:** Use Mockly's UI to select question types (Multiple Choice, True/False, Identification, etc.), passing score, and question counts. Mockly generates a strict prompt.
+2. **Generate Externally:** Copy the prompt, paste it into an LLM alongside your PDFs/notes, and copy the resulting JSON.
+3. **Import:** Paste the JSON into Mockly. 
+4. **Practice & Review:** Take the exam in a focused UI. Once submitted, Mockly grades it (handling fuzzy logic for text inputs) and displays pre-generated explanations for why answers were right or wrong.
 
-1. Open the prompt builder in Mockly and copy the generated prompt.
-2. Paste that prompt into an AI chatbot like ChatGPT, Gemini, or Claude.
-3. Add the sources or reference material you want the mock exam to be based on.
-4. The prompt already contains the required instructions, so no extra prompt text is needed.
-5. Paste the JSON directly into Mockly or upload it as a `.json` file.
+## Main Features
 
-This flow makes it easy to go from source material to a playable mock exam in minutes.
+- **Decoupled AI Architecture:** Zero API keys or ongoing costs required. Use whatever AI model is currently the smartest.
+- **Smart Exam Player:** Full attempt runtime with progress tracking, question flagging, and timed sessions.
+- **Exam Library:** Save imported JSON exams to your database to retake them anytime.
+- **Attempt History:** Track your past scores and review exactly which questions you missed and why.
 
-## Tech Stack
+## Developer Setup
 
-- Next.js (App Router) + React + TypeScript
-- Tailwind CSS + shadcn/Base UI components
-- Prisma + PostgreSQL
-- Vitest for unit tests
+### Prerequisites
+- Node.js 18+
+- npm
+- PostgreSQL
 
-## Quick Start
+### Run Locally
 
 1. Install dependencies:
-
 ```bash
 npm install
+
 ```
 
-2. Set up environment variables in `.env`:
+2. Configure environment variables in `.env`:
 
 ```bash
 DATABASE_URL="your_postgres_connection_string"
+
 ```
 
-3. Run database migrations:
+3. Apply database migrations:
 
 ```bash
 npx prisma migrate dev
+
 ```
 
 4. Start development server:
 
 ```bash
 npm run dev
+
 ```
 
-Open `http://localhost:3000`.
+Open http://localhost:3000 to view the app.
 
-## Useful Scripts
+### Useful Commands
 
-- `npm run dev` - Start local dev server
-- `npm run build` - Build for production
-- `npm run start` - Run production build
-- `npm run lint` - Run ESLint
-- `npm run test:unit` - Run unit tests
-- `npm run db:test` - Check database connectivity
-- `npm run db:studio` - Open Prisma Studio
+* `npm run dev` - start local dev server
+* `npm run build` - build for production
+* `npm run start` - run production build
+* `npm run lint` - run ESLint
+* `npm run test:unit` - run unit tests
+* `npm run db:test` - check database connectivity
+* `npm run db:studio` - open Prisma Studio to view the database UI
 
-## Project Structure
+### Project Architecture
 
-- `app/(dashboard)` - Main dashboard pages (library, attempts, settings)
-- `app/api` - REST API routes for exams, attempts, settings, backups
-- `components` - UI and feature components
-- `lib` - Core domain logic (schema, grading, mappers, runtime helpers)
-- `prisma` - Schema and migrations
-- `tests` - Unit tests
-
-## Status
-
-Mockly is actively developed and already provides a complete end-to-end exam workflow from import to review.
+* `app/(dashboard)` - Main application views (Library, Attempts, Import)
+* `app/api` - Backend API routes for database interactions
+* `components` - Modular UI components (Exam Player, Question Renderers)
+* `lib` - Core domain logic, JSON validation (Zod), and grading utilities
+* `prisma` - Database schema and migrations

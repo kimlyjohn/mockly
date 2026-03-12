@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Merriweather, Geist } from "next/font/google";
+import { Manrope, Sora, Geist } from "next/font/google";
 
 import { ThemeInitializer } from "@/components/dashboard/ThemeInitializer";
 
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
-const displayFont = Merriweather({
+const displayFont = Sora({
   variable: "--font-display",
   weight: ["700"],
   subsets: ["latin"],
@@ -20,8 +20,17 @@ const bodyFont = Manrope({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  ),
   title: "Mockly",
-  description: "Smart mock exam player for fast exam prep.",
+  description:
+    "Mockly helps learners turn source material into realistic mock exams, practice under exam-like flow, and review with clarity.",
+  openGraph: {
+    title: "Mockly",
+    description:
+      "Create, practice, and review mock exams from your own source material.",
+  },
 };
 
 export default function RootLayout({
@@ -45,7 +54,11 @@ export default function RootLayout({
   })();`;
 
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
+    <html
+      lang="en"
+      className={cn("font-sans", geist.variable)}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>

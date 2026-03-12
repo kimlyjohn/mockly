@@ -59,12 +59,12 @@ export function SidebarNav() {
   return (
     <aside className="w-full border-b border-slate-200 bg-white/80 p-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
       <div className="mb-6 px-2">
-        <p className="text-xs uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+        <p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
           Mockly
         </p>
-        <h1 className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
-          Dashboard
-        </h1>
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          Mock exam practice
+        </p>
       </div>
 
       <nav className="space-y-1">

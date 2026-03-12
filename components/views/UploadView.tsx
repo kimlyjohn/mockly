@@ -28,7 +28,9 @@ export function UploadView({
     <section className="mx-auto w-full max-w-5xl space-y-6">
       <Card className="overflow-hidden bg-linear-to-r from-emerald-500 to-teal-500 p-0 text-white">
         <div className="p-8">
-          <h1 className="text-4xl font-bold tracking-tight">mockly</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl font-bold tracking-tight">Mockly</h1>
+          </div>
           <p className="mt-2 max-w-2xl text-emerald-50">
             Upload a validated exam JSON and turn it into an interactive mock
             exam experience.
@@ -46,7 +48,7 @@ export function UploadView({
               leftIcon={<FileQuestion className="h-4 w-4" />}
               onClick={() => setIsTemplateOpen(true)}
             >
-              Open AI Prompt Builder
+              Open AI Exam Prompt Builder
             </Button>
           </div>
         </div>

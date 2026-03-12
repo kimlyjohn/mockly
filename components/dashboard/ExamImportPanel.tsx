@@ -316,11 +316,18 @@ export function ExamImportPanel({ onImported }: ExamImportPanelProps) {
           leftIcon={<Bot className="h-4 w-4" />}
           onClick={() => setTemplateOpen(true)}
         >
-          Open AI Prompt Builder
+          Open AI Exam Prompt Builder
         </Button>
-        <p className="text-sm text-muted-foreground">
-          Generate one-shot prompts for ChatGPT/Claude/Gemini, then paste JSON
-          below.
+      </div>
+
+      <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-sm dark:border-emerald-900/60 dark:bg-emerald-950/30">
+        <p className="font-medium text-emerald-900 dark:text-emerald-100">
+          New here?
+        </p>
+        <p className="mt-1 text-emerald-800/90 dark:text-emerald-200/90">
+          1) Copy prompt from AI Exam Prompt Builder, 2) paste it in
+          ChatGPT/Claude/Gemini with your lessons/sources, 3) paste the
+          generated JSON here, then import.
         </p>
       </div>
 
