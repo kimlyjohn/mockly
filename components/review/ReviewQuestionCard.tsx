@@ -14,6 +14,19 @@ const TYPE_LABELS: Record<Question["type"], string> = {
   enumeration: "Enumeration",
 };
 
+const TYPE_TONE: Record<Question["type"], string> = {
+  true_false:
+    "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-200 dark:border-sky-900",
+  multiple_choice:
+    "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/30 dark:text-violet-200 dark:border-violet-900",
+  identification:
+    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-200 dark:border-amber-900",
+  matching:
+    "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-200 dark:border-cyan-900",
+  enumeration:
+    "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-950/30 dark:text-fuchsia-200 dark:border-fuchsia-900",
+};
+
 const renderScalar = (value: string | undefined, emptyLabel: string) => (
   <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
     {value?.trim() ? value : emptyLabel}
@@ -94,6 +107,63 @@ const renderMatching = (
   );
 };
 
+const normalize = (value: string) => value.trim().toLowerCase();
+
+const renderMatchingComparison = (
+  question: Question,
+  userAnswer: UserAnswer | undefined,
+) => {
+  if (question.type !== "matching") {
+    return null;
+  }
+
+  const userMap =
+    userAnswer && !Array.isArray(userAnswer) && typeof userAnswer !== "string"
+      ? (userAnswer as Record<string, string>)
+      : {};
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 bg-slate-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        <span>Prompt</span>
+        <span>Your answer</span>
+        <span>Correct answer</span>
+        <span>Status</span>
+      </div>
+
+      <div className="divide-y divide-slate-200 dark:divide-slate-700">
+        {question.options.left.map((left) => {
+          const userValue = userMap[left] ?? "";
+          const correctValue = question.correctAnswer[left] ?? "";
+          const isCorrect =
+            userValue.length > 0 &&
+            normalize(userValue) === normalize(correctValue);
+
+          return (
+            <div
+              key={left}
+              className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-start gap-2 px-3 py-2 text-sm"
+            >
+              <p className="font-medium text-slate-800 dark:text-slate-100">
+                {left}
+              </p>
+              <p className="text-slate-700 dark:text-slate-200">
+                {userValue || "(No match)"}
+              </p>
+              <p className="text-slate-700 dark:text-slate-200">
+                {correctValue || "(No match)"}
+              </p>
+              <Badge variant={isCorrect ? "default" : "outline"}>
+                {isCorrect ? "Correct" : "Mismatch"}
+              </Badge>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 interface ReviewQuestionCardProps {
   index: number;
   question: Question;
@@ -155,6 +225,8 @@ export function ReviewQuestionCard({
     return renderScalar(question.correctAnswer, "(No answer)");
   };
 
+  const isMatchingQuestion = question.type === "matching";
+
   return (
     <Card
       className={[
@@ -169,7 +241,7 @@ export function ReviewQuestionCard({
           <div className="flex flex-wrap items-center gap-2">
             <Badge
               variant="outline"
-              className="text-[11px] uppercase tracking-[0.08em]"
+              className={`text-[11px] uppercase tracking-[0.08em] ${TYPE_TONE[question.type]}`}
             >
               {TYPE_LABELS[question.type]}
             </Badge>
@@ -194,20 +266,24 @@ export function ReviewQuestionCard({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
-          <p className="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-            Your answer:
-          </p>
-          {renderUserAnswer()}
+      {isMatchingQuestion ? (
+        renderMatchingComparison(question, userAnswer)
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+            <p className="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
+              Your answer:
+            </p>
+            {renderUserAnswer()}
+          </div>
+          <div className="space-y-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+            <p className="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
+              Correct answer:
+            </p>
+            {renderCorrectAnswer()}
+          </div>
         </div>
-        <div className="space-y-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
-          <p className="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-            Correct answer:
-          </p>
-          {renderCorrectAnswer()}
-        </div>
-      </div>
+      )}
 
       <div className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200">
         <p className="font-bold">Explanation</p>

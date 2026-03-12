@@ -45,9 +45,12 @@ export const useKeyboardShortcuts = ({
       if (event.key.toLowerCase() === "b") onToggleFlag();
       if (event.key.toLowerCase() === "t") onSelectTf?.("true");
       if (event.key.toLowerCase() === "f") onSelectTf?.("false");
-      if (/^[1-4]$/.test(event.key))
+      if (/^[1-9]$/.test(event.key)) {
         onSelectMcqByIndex?.(Number(event.key) - 1);
-      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") onSubmit();
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        onSubmit();
+      }
     };
 
     window.addEventListener("keydown", onKeyDown);

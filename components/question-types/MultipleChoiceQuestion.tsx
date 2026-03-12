@@ -39,6 +39,9 @@ export function MultipleChoiceQuestion({
           </button>
         ))}
       </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Shortcut: press 1-9 to pick an option.
+      </p>
     </div>
   );
 }

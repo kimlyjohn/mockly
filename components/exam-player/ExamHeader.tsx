@@ -43,6 +43,7 @@ export function ExamHeader({
             variant={isCurrentFlagged ? "secondary" : "ghost"}
             onClick={onToggleFlag}
             leftIcon={<Flag className="h-4 w-4" />}
+            title="Shortcut: B"
           >
             {isCurrentFlagged ? "Flagged" : "Flag"}
           </Button>

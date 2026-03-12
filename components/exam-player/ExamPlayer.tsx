@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { ConfirmSubmitModal } from "@/components/ui/ConfirmSubmitModal";
 import { Card } from "@/components/ui/card";
-import { useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
+import { useKeyboardShortcuts } from "@/hooks/shared/useKeyboardShortcuts";
 import type { Question } from "@/types/exam";
 import { useExamStore } from "@/store/examStore";
 

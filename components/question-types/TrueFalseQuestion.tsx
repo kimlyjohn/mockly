@@ -39,6 +39,9 @@ export function TrueFalseQuestion({
           </button>
         ))}
       </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Shortcut: press T for true or F for false.
+      </p>
     </div>
   );
 }

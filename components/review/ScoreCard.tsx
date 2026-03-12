@@ -56,7 +56,7 @@ export function ScoreCard({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-            Exam Results
+            Submission Results
           </h2>
           <p className="text-slate-600 dark:text-slate-300">
             You scored {totalScore} out of {maxScore}

@@ -49,11 +49,18 @@ export function ConfirmSubmitModal({
                 <span className="font-semibold text-foreground">
                   {unansweredCount}
                 </span>{" "}
-                unanswered question{unansweredCount === 1 ? "" : "s"} and{" "}
-                <span className="font-semibold text-foreground">
-                  {flaggedCount}
-                </span>{" "}
-                flagged question{flaggedCount === 1 ? "" : "s"}.
+                unanswered question{unansweredCount === 1 ? "" : "s"}
+                {flaggedCount > 0 && (
+                  <>
+                    {" "}
+                    and{" "}
+                    <span className="font-semibold text-foreground">
+                      {flaggedCount}
+                    </span>{" "}
+                    flagged question{flaggedCount === 1 ? "" : "s"}
+                  </>
+                )}
+                .
               </DialogDescription>
             </div>
           </div>
