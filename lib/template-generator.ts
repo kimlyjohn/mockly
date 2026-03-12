@@ -53,14 +53,32 @@ export type TemplateExamOutput = Exam & {
   generatorContext: GeneratorContext;
 };
 
+const NO_CHOICE_IDENTIFICATION: TemplateTypeSelection =
+  "identification_no_choices";
+
+const AI_DECIDES_DEFAULT_TYPES: TemplateTypeSelection[] = [
+  "true_false",
+  "multiple_choice",
+  "identification_with_choices",
+  "matching",
+  "enumeration",
+];
+
 export const generateTemplateExam = (
   selectedTypes: TemplateTypeSelection[],
   meta: TemplateMetaInput,
   strategy?: TemplateGenerationStrategy,
 ): TemplateExamOutput => {
   const aiDecides = strategy?.aiDecidesQuestionTypesAndCounts ?? true;
+  const sanitizedSelectedTypes = aiDecides
+    ? selectedTypes.filter((type) => type !== NO_CHOICE_IDENTIFICATION)
+    : selectedTypes;
   const effectiveTypes =
-    selectedTypes.length > 0 ? selectedTypes : FALLBACK_TYPES;
+    sanitizedSelectedTypes.length > 0
+      ? sanitizedSelectedTypes
+      : aiDecides
+        ? AI_DECIDES_DEFAULT_TYPES
+        : FALLBACK_TYPES;
   const questions: Question[] = [];
 
   effectiveTypes.forEach((type, index) => {
@@ -123,13 +141,14 @@ export const generateTemplateExam = (
             "AI should decide the final mix of question types and total question count.",
             "AI may add/remove/rewrite questions as needed for the target difficulty.",
             "Selected types are preferences, not hard constraints.",
+            "Prefer identification with choices; avoid no-choice identification unless explicitly required.",
           ]
         : [
             "Keep one starter question per selected type.",
             "Expand question count manually after replacing TODO placeholders.",
             "Selected types should be treated as hard constraints.",
           ],
-      selectedTypePreferences: selectedTypes,
+      selectedTypePreferences: effectiveTypes,
       questionHints,
     },
   };
@@ -166,6 +185,9 @@ export const buildAiExamPrompt = (
     .map(([type, count]) => `- include at least ${count} ${type} question(s)`);
 
   const selectedPrefs = exam.generatorContext.selectedTypePreferences;
+  const selectedPrefsForPrompt = aiDecidesTypes
+    ? selectedPrefs.filter((type) => type !== NO_CHOICE_IDENTIFICATION)
+    : selectedPrefs;
 
   const hasType = (...types: TemplateTypeSelection[]) =>
     aiDecidesTypes ? true : types.some((t) => selectedPrefs.includes(t));
@@ -174,13 +196,19 @@ export const buildAiExamPrompt = (
   const typeLines: string[] = aiDecidesTypes
     ? [
         "All supported types may be used: true_false, multiple_choice, identification, matching, enumeration.",
-        `Preferred types (if topic allows): ${selectedPrefs.map(formatTypeForDisplay).join(", ") || "any"}.`,
+        `Preferred types (if topic allows): ${selectedPrefsForPrompt.map(formatTypeForDisplay).join(", ") || "any"}.`,
+        "Avoid identification without choices unless explicitly required by user constraints.",
       ]
     : selectedPrefs.map((t) => `- ${formatTypeForDisplay(t)}`);
 
   // ── Build realism table for selected types ──────────────────
   const effectiveTypes: TemplateTypeSelection[] = aiDecidesTypes
-    ? (Object.keys(EXAM_REALISM_DISTRIBUTION) as TemplateTypeSelection[])
+    ? (
+        Object.keys(EXAM_REALISM_DISTRIBUTION) as TemplateTypeSelection[]
+      ).filter(
+        (type): type is TemplateTypeSelection =>
+          type !== NO_CHOICE_IDENTIFICATION,
+      )
     : selectedPrefs;
 
   const realismTableLines: string[] = [

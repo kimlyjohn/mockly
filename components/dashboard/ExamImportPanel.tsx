@@ -1,11 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bot, FileJson, Loader2, Upload } from "lucide-react";
 import { ZodError } from "zod";
 
 import { getApiErrorMessage, readApiResponse } from "@/lib/api-client";
+import {
+  normalizeExamInput,
+  parsePossiblyWrappedJson,
+  unwrapExamPayload,
+} from "@/lib/import-normalizer";
 import { examSchema } from "@/lib/schema";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,121 +20,10 @@ interface ExamImportPanelProps {
   onImported?: () => void;
 }
 
-interface MatchingOptionItem {
-  id: string;
-  text: string;
-}
-
 interface ToastState {
   kind: "success" | "error";
   text: string;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-const isMatchingOptionItem = (value: unknown): value is MatchingOptionItem =>
-  isRecord(value) &&
-  typeof value.id === "string" &&
-  typeof value.text === "string";
-
-const normalizeMatchingQuestion = (
-  question: Record<string, unknown>,
-): Record<string, unknown> => {
-  const options = question.options;
-  const correctAnswer = question.correctAnswer;
-
-  if (!isRecord(options) || !isRecord(correctAnswer)) {
-    return question;
-  }
-
-  const left = options.left;
-  const right = options.right;
-  if (!Array.isArray(left) || !Array.isArray(right)) {
-    return question;
-  }
-
-  const isObjectStyle =
-    left.every(isMatchingOptionItem) && right.every(isMatchingOptionItem);
-  if (!isObjectStyle) {
-    return question;
-  }
-
-  const leftItems = left as MatchingOptionItem[];
-  const rightItems = right as MatchingOptionItem[];
-  const leftById = new Map(leftItems.map((item) => [item.id, item.text]));
-  const rightById = new Map(rightItems.map((item) => [item.id, item.text]));
-
-  const normalizedCorrect = Object.fromEntries(
-    Object.entries(correctAnswer).map(([leftId, rightId]) => {
-      if (typeof rightId !== "string") {
-        return [leftId, String(rightId)];
-      }
-      return [
-        leftById.get(leftId) ?? leftId,
-        rightById.get(rightId) ?? rightId,
-      ];
-    }),
-  );
-
-  return {
-    ...question,
-    options: {
-      left: leftItems.map((item) => item.text),
-      right: rightItems.map((item) => item.text),
-    },
-    correctAnswer: normalizedCorrect,
-  };
-};
-
-const normalizeExamInput = (raw: unknown): unknown => {
-  if (!isRecord(raw) || !Array.isArray(raw.questions)) {
-    return raw;
-  }
-
-  const normalizedQuestions = raw.questions.map((question) => {
-    if (!isRecord(question) || question.type !== "matching") {
-      return question;
-    }
-    return normalizeMatchingQuestion(question);
-  });
-
-  const normalizedMetadata = isRecord(raw.metadata)
-    ? {
-        ...raw.metadata,
-        totalQuestions: normalizedQuestions.length,
-      }
-    : raw.metadata;
-
-  return {
-    ...raw,
-    metadata: normalizedMetadata,
-    questions: normalizedQuestions,
-  };
-};
-
-const unwrapExamPayload = (raw: unknown): unknown => {
-  if (!isRecord(raw)) {
-    return raw;
-  }
-
-  // Common wrapper from API exports/imports: { exam: { ... } }
-  if (isRecord(raw.exam)) {
-    return raw.exam;
-  }
-
-  // Common wrapper from other tools: { data: { ... } }
-  if (isRecord(raw.data)) {
-    return raw.data;
-  }
-
-  // Allow single-item arrays containing an exam object.
-  if (Array.isArray(raw.exams) && raw.exams.length === 1) {
-    return raw.exams[0];
-  }
-
-  return raw;
-};
 
 const formatImportError = (caught: unknown): string => {
   if (caught instanceof ZodError) {
@@ -158,6 +52,22 @@ export function ExamImportPanel({ onImported }: ExamImportPanelProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
+
+  useEffect(() => {
+    if (!jsonInput) {
+      return;
+    }
+
+    if (error) {
+      setError(null);
+    }
+    if (message) {
+      setMessage(null);
+    }
+    if (toast?.kind === "error") {
+      setToast(null);
+    }
+  }, [jsonInput, error, message, toast]);
 
   const showToast = (next: ToastState) => {
     setToast(next);
@@ -209,7 +119,7 @@ export function ExamImportPanel({ onImported }: ExamImportPanelProps) {
 
     try {
       const text = await file.text();
-      const raw = JSON.parse(text) as unknown;
+      const raw = parsePossiblyWrappedJson(text);
       const createdExamId = await importExamPayload(
         raw,
         "dashboard_upload",
@@ -246,7 +156,7 @@ export function ExamImportPanel({ onImported }: ExamImportPanelProps) {
 
     setIsSubmitting(true);
     try {
-      const raw = JSON.parse(trimmed) as unknown;
+      const raw = parsePossiblyWrappedJson(trimmed);
       const createdExamId = await importExamPayload(
         raw,
         "dashboard_paste",
