@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { getApiErrorMessage, readApiResponse } from "@/lib/api-client";
 import {
   Dialog,
   DialogContent,
@@ -43,12 +44,12 @@ export function AttemptItemMenu({
         method: "DELETE",
       });
 
-      const payload = (await response.json()) as {
-        error?: { message?: string };
-      };
+      const payload = await readApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(payload.error?.message ?? "Failed to delete attempt.");
+        throw new Error(
+          getApiErrorMessage(response, payload, "Failed to delete attempt."),
+        );
       }
 
       setConfirmOpen(false);

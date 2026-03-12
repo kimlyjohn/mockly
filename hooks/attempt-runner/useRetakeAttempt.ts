@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+
+import { getApiErrorMessage, readApiResponse } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 
 interface UseRetakeAttemptOptions {
@@ -31,17 +33,16 @@ export function useRetakeAttempt({ examId, onError }: UseRetakeAttemptOptions) {
         }),
       });
 
-      const payload = (await response.json()) as {
-        data?: {
-          attempt?: {
-            id: string;
-          };
+      const payload = await readApiResponse<{
+        attempt?: {
+          id: string;
         };
-        error?: { message?: string };
-      };
+      }>(response);
 
-      if (!response.ok || !payload.data?.attempt?.id) {
-        throw new Error(payload.error?.message ?? "Failed to start retake.");
+      if (!response.ok || !payload?.data?.attempt?.id) {
+        throw new Error(
+          getApiErrorMessage(response, payload, "Failed to start retake."),
+        );
       }
 
       router.push(`/attempts/${payload.data.attempt.id}`);

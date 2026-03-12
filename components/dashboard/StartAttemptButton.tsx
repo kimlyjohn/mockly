@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
+import { getApiErrorMessage, readApiResponse } from "@/lib/api-client";
 
 interface StartAttemptButtonProps {
   examId: string;
@@ -48,15 +49,12 @@ export function StartAttemptButton({
         }),
       });
 
-      const rawBody = await response.text();
-      const payload: StartAttemptPayload | null = rawBody
-        ? ((JSON.parse(rawBody) as StartAttemptPayload) ?? null)
-        : null;
+      const payload =
+        await readApiResponse<StartAttemptPayload["data"]>(response);
 
       if (!response.ok || !payload?.data?.attempt?.id) {
         throw new Error(
-          payload?.error?.message ??
-            `Failed to start attempt (HTTP ${response.status}).`,
+          getApiErrorMessage(response, payload, "Failed to start attempt."),
         );
       }
 

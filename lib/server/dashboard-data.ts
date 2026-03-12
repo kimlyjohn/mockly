@@ -3,6 +3,14 @@ import { AttemptStatus } from "@/app/generated/prisma/client";
 import { db } from "@/lib/db";
 import { statusFromDb, themeFromDb } from "@/lib/exam-mappers";
 
+const DEFAULT_SETTINGS = {
+  theme: "light" as const,
+  autosaveSeconds: 20,
+  enableRetryIncorrect: true,
+  enableKeyboardShortcuts: true,
+  updatedAt: new Date(0),
+};
+
 export const listExams = async () => {
   return db.exam.findMany({
     orderBy: { createdAt: "desc" },
@@ -208,19 +216,24 @@ export const getAttemptDetails = async (attemptId: string) => {
 };
 
 export const getSettings = async () => {
-  const settings = await db.appSettings.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { id: 1 },
-  });
+  try {
+    const settings = await db.appSettings.upsert({
+      where: { id: 1 },
+      update: {},
+      create: { id: 1 },
+    });
 
-  return {
-    theme: themeFromDb(settings.theme),
-    autosaveSeconds: settings.autosaveSeconds,
-    enableRetryIncorrect: settings.enableRetryIncorrect,
-    enableKeyboardShortcuts: settings.enableKeyboardShortcuts,
-    updatedAt: settings.updatedAt,
-  };
+    return {
+      theme: themeFromDb(settings.theme),
+      autosaveSeconds: settings.autosaveSeconds,
+      enableRetryIncorrect: settings.enableRetryIncorrect,
+      enableKeyboardShortcuts: settings.enableKeyboardShortcuts,
+      updatedAt: settings.updatedAt,
+    };
+  } catch (error) {
+    console.error("Failed to load settings for dashboard page.", error);
+    return DEFAULT_SETTINGS;
+  }
 };
 
 export const formatAttemptState = (status: AttemptStatus): string => {

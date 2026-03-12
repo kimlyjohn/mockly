@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { readApiResponse } from "@/lib/api-client";
+
 const getCookieTheme = (): "light" | "dark" | null => {
   try {
     const match = document.cookie.match(/(?:^|; )mockly-theme=([^;]+)/);
@@ -55,13 +57,11 @@ export function ThemeInitializer() {
           return;
         }
 
-        const payload = (await response.json()) as {
-          data?: {
-            theme?: "light" | "dark";
-          };
-        };
+        const payload = await readApiResponse<{
+          theme?: "light" | "dark";
+        }>(response);
 
-        const theme = payload.data?.theme ?? "light";
+        const theme = payload?.data?.theme ?? "light";
         localStorage.setItem("mockly-theme", theme);
         applyTheme(theme);
       } catch {

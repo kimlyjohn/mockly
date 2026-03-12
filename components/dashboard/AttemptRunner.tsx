@@ -22,6 +22,7 @@ import { useRetakeAttempt } from "@/hooks/attempt-runner/useRetakeAttempt";
 import { useAttemptShortcuts } from "@/hooks/attempt-runner/useAttemptShortcuts";
 import { ConfirmSubmitModal } from "@/components/ui/ConfirmSubmitModal";
 import { Card } from "@/components/ui/card";
+import { getApiErrorMessage, readApiResponse } from "@/lib/api-client";
 import { gradeExam, type ExamGradeResult } from "@/lib/grading";
 import type { Exam, UserAnswer } from "@/types/exam";
 
@@ -88,26 +89,30 @@ export function AttemptRunner({ attemptId }: AttemptRunnerProps) {
         fetch("/api/settings", { cache: "no-store" }),
       ]);
 
-      const attemptJson = (await attemptResponse.json()) as {
-        data?: AttemptPayload;
-        error?: { message?: string };
-      };
+      const attemptJson =
+        await readApiResponse<AttemptPayload>(attemptResponse);
 
-      if (!attemptResponse.ok || !attemptJson.data) {
+      if (!attemptResponse.ok || !attemptJson?.data) {
         throw new Error(
-          attemptJson.error?.message ?? "Failed to load attempt.",
+          getApiErrorMessage(
+            attemptResponse,
+            attemptJson,
+            "Failed to load attempt.",
+          ),
         );
       }
 
       if (settingsResponse.ok) {
-        const settingsJson = (await settingsResponse.json()) as {
-          data?: {
-            autosaveSeconds?: number;
-            enableKeyboardShortcuts?: boolean;
-          };
-        };
-        setAutosaveSeconds(settingsJson.data?.autosaveSeconds ?? 20);
-        setKeyboardEnabled(settingsJson.data?.enableKeyboardShortcuts ?? true);
+        const settingsJson = await readApiResponse<
+          {
+            data?: {
+              autosaveSeconds?: number;
+              enableKeyboardShortcuts?: boolean;
+            };
+          }["data"]
+        >(settingsResponse);
+        setAutosaveSeconds(settingsJson?.data?.autosaveSeconds ?? 20);
+        setKeyboardEnabled(settingsJson?.data?.enableKeyboardShortcuts ?? true);
       }
 
       setExam(attemptJson.data.exam);
@@ -171,12 +176,12 @@ export function AttemptRunner({ attemptId }: AttemptRunnerProps) {
         body: snapshot,
       });
 
-      const payload = (await response.json()) as {
-        error?: { message?: string };
-      };
+      const payload = await readApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(payload.error?.message ?? "Failed to save progress.");
+        throw new Error(
+          getApiErrorMessage(response, payload, "Failed to save progress."),
+        );
       }
 
       lastSavedSnapshotRef.current = snapshot;
@@ -226,13 +231,12 @@ export function AttemptRunner({ attemptId }: AttemptRunnerProps) {
         method: "POST",
       });
 
-      const payload = (await response.json()) as {
-        data?: SubmitPayload;
-        error?: { message?: string };
-      };
+      const payload = await readApiResponse<SubmitPayload>(response);
 
-      if (!response.ok || !payload.data) {
-        throw new Error(payload.error?.message ?? "Failed to submit attempt.");
+      if (!response.ok || !payload?.data) {
+        throw new Error(
+          getApiErrorMessage(response, payload, "Failed to submit attempt."),
+        );
       }
 
       setAttemptStatus("submitted");

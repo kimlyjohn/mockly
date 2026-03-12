@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
+import { getApiErrorMessage, readApiResponse } from "@/lib/api-client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,15 +68,12 @@ export function SettingsForm({ initial }: SettingsFormProps) {
 
     try {
       const response = await fetch("/api/backup/export", { cache: "no-store" });
-      const payload = (await response.json()) as {
-        data?: unknown;
-        error?: {
-          message?: string;
-        };
-      };
+      const payload = await readApiResponse<unknown>(response);
 
-      if (!response.ok || !payload.data) {
-        throw new Error(payload.error?.message ?? "Failed to export backup.");
+      if (!response.ok || !payload?.data) {
+        throw new Error(
+          getApiErrorMessage(response, payload, "Failed to export backup."),
+        );
       }
 
       const blob = new Blob([JSON.stringify(payload.data, null, 2)], {
@@ -115,18 +113,15 @@ export function SettingsForm({ initial }: SettingsFormProps) {
         body: JSON.stringify(payload),
       });
 
-      const result = (await response.json()) as {
-        data?: {
-          importedCount: number;
-          skipped: string[];
-        };
-        error?: {
-          message?: string;
-        };
-      };
+      const result = await readApiResponse<{
+        importedCount: number;
+        skipped: string[];
+      }>(response);
 
-      if (!response.ok || !result.data) {
-        throw new Error(result.error?.message ?? "Failed to import backup.");
+      if (!response.ok || !result?.data) {
+        throw new Error(
+          getApiErrorMessage(response, result, "Failed to import backup."),
+        );
       }
 
       const skippedCount = result.data.skipped.length;
@@ -162,14 +157,12 @@ export function SettingsForm({ initial }: SettingsFormProps) {
         }),
       });
 
-      const payload = (await response.json()) as {
-        error?: {
-          message?: string;
-        };
-      };
+      const payload = await readApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(payload.error?.message ?? "Failed to save settings.");
+        throw new Error(
+          getApiErrorMessage(response, payload, "Failed to save settings."),
+        );
       }
 
       applyTheme(theme);

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { getApiErrorMessage, readApiResponse } from "@/lib/api-client";
 import {
   Dialog,
   DialogContent,
@@ -70,14 +71,12 @@ export function ExamLibraryItemMenu({
         }),
       });
 
-      const payload = (await response.json()) as {
-        error?: {
-          message?: string;
-        };
-      };
+      const payload = await readApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(payload.error?.message ?? "Failed to update exam.");
+        throw new Error(
+          getApiErrorMessage(response, payload, "Failed to update exam."),
+        );
       }
 
       setEditOpen(false);
@@ -100,14 +99,12 @@ export function ExamLibraryItemMenu({
         method: "DELETE",
       });
 
-      const payload = (await response.json()) as {
-        error?: {
-          message?: string;
-        };
-      };
+      const payload = await readApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(payload.error?.message ?? "Failed to delete exam.");
+        throw new Error(
+          getApiErrorMessage(response, payload, "Failed to delete exam."),
+        );
       }
 
       setDeleteConfirmOpen(false);

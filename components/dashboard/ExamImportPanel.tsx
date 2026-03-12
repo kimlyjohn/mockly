@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bot, FileJson, Loader2, Upload } from "lucide-react";
 import { ZodError } from "zod";
 
+import { getApiErrorMessage, readApiResponse } from "@/lib/api-client";
 import { examSchema } from "@/lib/schema";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/textarea";
@@ -188,17 +189,14 @@ export function ExamImportPanel({ onImported }: ExamImportPanelProps) {
       }),
     });
 
-    const payload = (await response.json()) as {
-      data?: {
-        id?: string;
-      };
-      error?: {
-        message?: string;
-      };
-    };
+    const payload = await readApiResponse<{
+      id?: string;
+    }>(response);
 
-    if (!response.ok || !payload.data?.id) {
-      throw new Error(payload.error?.message ?? "Failed to import exam.");
+    if (!response.ok || !payload?.data?.id) {
+      throw new Error(
+        getApiErrorMessage(response, payload, "Failed to import exam."),
+      );
     }
 
     return payload.data.id;
