@@ -44,38 +44,33 @@ export default async function RootLayout({
   const initialTheme =
     cookieTheme === "light" || cookieTheme === "dark" ? cookieTheme : undefined;
 
-  const themeBootScript = `(() => {
-    try {
-      const cookieMatch = document.cookie.match(/(?:^|; )mockly-theme=([^;]+)/);
-      const cookieTheme = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
-      const stored = localStorage.getItem("mockly-theme");
-      const preferred = cookieTheme === "light" || cookieTheme === "dark" || cookieTheme === "system"
-        ? cookieTheme
-        : stored;
-      const theme = preferred === "light" || preferred === "dark" || preferred === "system"
-        ? preferred
-        : "system";
-      if (theme === "system") {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const resolved = prefersDark ? "dark" : "light";
-        document.documentElement.setAttribute("data-theme", resolved);
-        document.documentElement.style.colorScheme = resolved;
-      } else {
-        document.documentElement.setAttribute("data-theme", theme);
-        document.documentElement.style.colorScheme = theme;
-      }
-    } catch {}
-  })();`;
-
   return (
     <html
       lang="en"
       className={cn("font-sans", geist.variable)}
       data-theme={initialTheme}
+      style={{
+        colorScheme:
+          initialTheme === "dark"
+            ? "dark"
+            : initialTheme === "light"
+              ? "light"
+              : "light dark",
+      }}
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <meta
+          name="color-scheme"
+          content={
+            initialTheme === "dark"
+              ? "dark"
+              : initialTheme === "light"
+                ? "light"
+                : "light dark"
+          }
+        />
+        <style>{`html{background:#f7fbfa;}@media (prefers-color-scheme: dark){html:not([data-theme]){background:#050a12;}}`}</style>
       </head>
       <body
         className={`${displayFont.variable} ${bodyFont.variable} antialiased`}

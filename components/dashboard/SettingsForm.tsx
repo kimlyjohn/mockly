@@ -32,14 +32,11 @@ const applyTheme = (theme: ThemeMode) => {
   document.cookie = `mockly-theme=${theme}; path=/; max-age=31536000; samesite=lax`;
 
   if (theme === "system") {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    const resolvedTheme = prefersDark ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", resolvedTheme);
-    document.documentElement.style.colorScheme = resolvedTheme;
+    document.documentElement.removeAttribute("data-theme");
+    document.documentElement.style.colorScheme = "light dark";
     return;
   }
+
   document.documentElement.setAttribute("data-theme", theme);
   document.documentElement.style.colorScheme = theme;
 };

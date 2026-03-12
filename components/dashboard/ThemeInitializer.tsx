@@ -3,33 +3,32 @@
 import { useEffect } from "react";
 
 const getCookieTheme = (): "system" | "light" | "dark" | null => {
-  const match = document.cookie.match(/(?:^|; )mockly-theme=([^;]+)/);
-  const value = match ? decodeURIComponent(match[1]) : null;
-  return value === "light" || value === "dark" || value === "system"
-    ? value
-    : null;
+  try {
+    const match = document.cookie.match(/(?:^|; )mockly-theme=([^;]+)/);
+    const value = match ? decodeURIComponent(match[1]) : null;
+    return value === "light" || value === "dark" || value === "system"
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
 };
 
 const applyTheme = (theme: "system" | "light" | "dark") => {
   document.cookie = `mockly-theme=${theme}; path=/; max-age=31536000; samesite=lax`;
 
   if (theme === "system") {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    const resolvedTheme = prefersDark ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", resolvedTheme);
-    document.documentElement.style.colorScheme = resolvedTheme;
+    document.documentElement.removeAttribute("data-theme");
+    document.documentElement.style.colorScheme = "light dark";
     return;
   }
+
   document.documentElement.setAttribute("data-theme", theme);
   document.documentElement.style.colorScheme = theme;
 };
 
 export function ThemeInitializer() {
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
-
     try {
       const stored = localStorage.getItem("mockly-theme");
       const cookieTheme = getCookieTheme();
@@ -64,10 +63,7 @@ export function ThemeInitializer() {
         applyTheme(theme);
 
         if (theme === "system") {
-          const media = window.matchMedia("(prefers-color-scheme: dark)");
-          const onChange = () => applyTheme("system");
-          media.addEventListener("change", onChange);
-          cleanup = () => media.removeEventListener("change", onChange);
+          document.documentElement.style.colorScheme = "light dark";
         }
       } catch {
         // Ignore initialization failures and fallback to media query.
@@ -75,10 +71,6 @@ export function ThemeInitializer() {
     };
 
     void syncTheme();
-
-    return () => {
-      cleanup?.();
-    };
   }, []);
 
   return null;
