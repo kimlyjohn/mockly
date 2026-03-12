@@ -1,4 +1,12 @@
 import type { Exam, Question } from "@/types/exam";
+import { buildTemplateQuestion } from "@/lib/template-generator-question-builder";
+import {
+  EXAM_REALISM_DISTRIBUTION,
+  SOURCE_ANALYSIS_INSTRUCTIONS,
+  TRUE_FALSE_TRAP_PATTERNS,
+  TYPES_FOR_FALLBACK,
+  formatTypeForDisplay,
+} from "@/lib/template-generator-content";
 
 export type TemplateTypeSelection =
   | "true_false"
@@ -45,92 +53,6 @@ export type TemplateExamOutput = Exam & {
   generatorContext: GeneratorContext;
 };
 
-const buildQuestion = (type: TemplateTypeSelection, id: string): Question => {
-  if (type === "true_false") {
-    return {
-      id,
-      type: "true_false",
-      prompt: "TODO: Write a true or false statement.",
-      correctAnswer: "true",
-      explanation: "TODO: Explain why this is true or false.",
-    };
-  }
-
-  if (type === "multiple_choice") {
-    return {
-      id,
-      type: "multiple_choice",
-      prompt: "TODO: Write your multiple choice question.",
-      options: [
-        "TODO: Option A",
-        "TODO: Option B",
-        "TODO: Option C",
-        "TODO: Option D",
-      ],
-      correctAnswer: "TODO: Option A",
-      explanation: "TODO: Explain why the correct option is correct.",
-    };
-  }
-
-  if (type === "identification_no_choices") {
-    return {
-      id,
-      type: "identification",
-      hasChoices: false,
-      prompt: "TODO: Write your identification question.",
-      correctAnswer: "TODO: Correct identification answer",
-      explanation: "TODO: Explain the answer.",
-    };
-  }
-
-  if (type === "identification_with_choices") {
-    return {
-      id,
-      type: "identification",
-      hasChoices: true,
-      prompt: "TODO: Write your identification question with choices.",
-      options: ["TODO: Choice 1", "TODO: Choice 2", "TODO: Choice 3"],
-      correctAnswer: "TODO: Choice 1",
-      explanation: "TODO: Explain why this choice is correct.",
-    };
-  }
-
-  if (type === "matching") {
-    return {
-      id,
-      type: "matching",
-      prompt: "TODO: Match each left item to its correct right item.",
-      options: {
-        left: ["TODO: Left item 1", "TODO: Left item 2", "TODO: Left item 3"],
-        right: [
-          "TODO: Right item 1",
-          "TODO: Right item 2",
-          "TODO: Right item 3",
-        ],
-      },
-      correctAnswer: {
-        "TODO: Left item 1": "TODO: Right item 1",
-        "TODO: Left item 2": "TODO: Right item 2",
-        "TODO: Left item 3": "TODO: Right item 3",
-      },
-      explanation: "TODO: Explain the matching pairs.",
-    };
-  }
-
-  return {
-    id,
-    type: "enumeration",
-    prompt: "TODO: Ask the learner to enumerate N items.",
-    correctAnswer: [
-      "TODO: Correct item 1",
-      "TODO: Correct item 2",
-      "TODO: Correct item 3",
-    ],
-    orderedAnswer: false,
-    explanation: "TODO: Explain all expected items.",
-  };
-};
-
 export const generateTemplateExam = (
   selectedTypes: TemplateTypeSelection[],
   meta: TemplateMetaInput,
@@ -138,12 +60,12 @@ export const generateTemplateExam = (
 ): TemplateExamOutput => {
   const aiDecides = strategy?.aiDecidesQuestionTypesAndCounts ?? true;
   const effectiveTypes =
-    selectedTypes.length > 0 ? selectedTypes : TYPES_FOR_FALLBACK;
+    selectedTypes.length > 0 ? selectedTypes : FALLBACK_TYPES;
   const questions: Question[] = [];
 
   effectiveTypes.forEach((type, index) => {
     const id = `${type}_${index + 1}`;
-    questions.push(buildQuestion(type, id));
+    questions.push(buildTemplateQuestion(type, id));
   });
 
   const questionHints: TemplateQuestionHint[] = questions.map((question) => ({
@@ -216,93 +138,6 @@ export const generateTemplateExam = (
 export const stringifyTemplateExam = (exam: TemplateExamOutput): string =>
   `${JSON.stringify(exam, null, 2)}\n`;
 
-const formatTypeForDisplay = (type: TemplateTypeSelection): string => {
-  if (type === "identification_no_choices")
-    return "identification (without choices)";
-  if (type === "identification_with_choices")
-    return "identification (with choices)";
-  return type;
-};
-
-// ─────────────────────────────────────────────────────────────
-// EXAM REALISM DISTRIBUTION TABLE
-// Describes how a real academic exam should distribute question
-// types. Used to inject realistic structure guidance into the
-// AI prompt so it doesn't pick arbitrary question counts.
-// ─────────────────────────────────────────────────────────────
-const EXAM_REALISM_DISTRIBUTION: Record<
-  TemplateTypeSelection,
-  { role: string; typicalCount: string; notes: string }
-> = {
-  true_false: {
-    role: "Bulk recall layer — tests definitions, distinctions, and common misconceptions.",
-    typicalCount: "20–30 items",
-    notes:
-      "This is the highest-volume type. Cover every major definition, key term, and common trap from the source. Each item should test ONE fact. Mix genuinely true statements with false ones where a single word is swapped (e.g. a wrong number, a wrong doctrine name, or a definition applied to the wrong concept).",
-  },
-  multiple_choice: {
-    role: "Conceptual understanding — tests application, cause-effect, and reasoning.",
-    typicalCount: "5–10 items",
-    notes:
-      "Use for questions that require choosing between closely related concepts. Each question must have exactly 4 options. Only one option is clearly correct; the distractors must be plausible but wrong. Avoid trick questions — distractors should represent common misconceptions, not wordplay.",
-  },
-  identification_no_choices: {
-    role: "Recall and precision — tests ability to name the exact term, person, law, case, or concept.",
-    typicalCount: "10–20 items",
-    notes:
-      "Write clues that are descriptive but unambiguous — the clue should point to exactly one correct answer. Cover key terms, landmark cases, important laws, named principles, and significant people from the source material.",
-  },
-  identification_with_choices: {
-    role: "Guided recall — same as identification but with a limited answer bank to reduce guessing.",
-    typicalCount: "5–10 items",
-    notes:
-      "Use when the answer space is bounded (e.g. 'which of these 4 people is the founding father?'). Provide 3–5 choices. The correct answer must exactly match one option value.",
-  },
-  matching: {
-    role: "Relationship mapping — tests whether students can correctly pair related concepts.",
-    typicalCount: "2–3 matching sets of 8–10 pairs each",
-    notes:
-      "Group pairs thematically into named sets (e.g. Set A: Doctrines, Set B: Maritime Zones). Each set should have 8–10 left-right pairs. Do NOT create one giant matching question — split by topic. Left items should be descriptions/clues; right items should be the short answer terms.",
-  },
-  enumeration: {
-    role: "List mastery — tests whether students can recall complete numbered lists.",
-    typicalCount: "4–8 enumeration groups",
-    notes:
-      "Each enumeration group covers one complete list from the source (e.g. '5 steps in treaty-making', '4 elements of a state', '8 non-derogable rights'). Only create an enumeration question for lists that appear explicitly in the source material. Set orderedAnswer: true only when sequence matters.",
-  },
-};
-
-// ─────────────────────────────────────────────────────────────
-// SOURCE ANALYSIS INSTRUCTIONS
-// Tells the AI HOW to read the source before writing questions.
-// ─────────────────────────────────────────────────────────────
-const SOURCE_ANALYSIS_INSTRUCTIONS = [
-  "Before writing any questions, analyze the source material for the following testable elements:",
-  "  1. KEY DEFINITIONS — every term that is explicitly defined in the source. These become true/false and identification questions.",
-  "  2. NUMBERED LISTS — every list with a fixed count (e.g. '5 elements', '3 principles', '4 steps'). Each complete list becomes one enumeration question.",
-  "  3. NAMED DOCTRINES / PRINCIPLES / THEORIES — every named concept becomes a potential identification or matching item.",
-  "  4. PEOPLE, DATES, LAWS, CASES — landmark facts that professors commonly test. These become identification or true/false items.",
-  "  5. COMMON CONFUSIONS — pairs of concepts that students commonly confuse (e.g. two doctrines with similar names, two zones with similar distances). These become true/false traps.",
-  "  6. CAUSE-AND-EFFECT RELATIONSHIPS — use these for multiple_choice questions that test conceptual understanding.",
-  "After identifying all testable elements, THEN decide the question type and count for each element.",
-];
-
-// ─────────────────────────────────────────────────────────────
-// TRUE/FALSE TRAP PATTERNS
-// Tells the AI exactly how to write realistic T/F questions
-// the way professors actually write them.
-// ─────────────────────────────────────────────────────────────
-const TRUE_FALSE_TRAP_PATTERNS = [
-  "When writing FALSE true/false statements, use EXACTLY ONE of these professor-style traps per question:",
-  "  TRAP 1 — WORD SWAP: Replace one key word with a wrong but similar-sounding word (e.g. 'Transportation' instead of 'Transformation').",
-  "  TRAP 2 — NUMBER SWAP: Replace a specific number with a wrong number (e.g. '24 nautical miles' instead of '12 nautical miles' for the territorial sea).",
-  "  TRAP 3 — DEFINITION INVERSION: Apply the correct definition of Concept A to Concept B (e.g. write the definition of international law but label it as national law).",
-  "  TRAP 4 — LIST CONTAMINATION: Include one wrong item in an otherwise correct list (e.g. list 4 correct founding members but add one non-member like Vietnam instead of the correct fifth).",
-  "  TRAP 5 — ATTRIBUTE SWAP: Swap a specific attribute between two related concepts (e.g. swap which doctrine covers 'revolution' vs. 'military coup').",
-  "  TRAP 6 — NEAR-MISS BODY/LAW: Reference a real concept but assign it to the wrong legal instrument (e.g. attribute a principle to the wrong Declaration or Convention).",
-  "Do NOT write FALSE statements that are obviously wrong. The statement must look credible at first glance.",
-];
-
 export const buildAiExamPrompt = (
   exam: TemplateExamOutput,
   options?: {
@@ -311,13 +146,17 @@ export const buildAiExamPrompt = (
     topicContext?: string;
     minQuestionCountPerType?: TemplateTypeMinimums;
     aiDecides?: boolean;
+    aiDecidesTypes?: boolean;
+    aiDecidesCounts?: boolean;
   },
 ): string => {
   const requireSources = options?.requireSources ?? true;
   const allowNonJsonInput = options?.allowNonJsonInput ?? true;
   const topicContext = options?.topicContext?.trim();
   const minQuestionCountPerType = options?.minQuestionCountPerType ?? {};
-  const aiDecides = options?.aiDecides ?? false;
+  const aiDecidesTypes = options?.aiDecidesTypes ?? options?.aiDecides ?? false;
+  const aiDecidesCounts =
+    options?.aiDecidesCounts ?? options?.aiDecides ?? false;
 
   const minTypeLines = Object.entries(minQuestionCountPerType)
     .filter((entry): entry is [TemplateTypeSelection, number] => {
@@ -329,10 +168,10 @@ export const buildAiExamPrompt = (
   const selectedPrefs = exam.generatorContext.selectedTypePreferences;
 
   const hasType = (...types: TemplateTypeSelection[]) =>
-    aiDecides ? true : types.some((t) => selectedPrefs.includes(t));
+    aiDecidesTypes ? true : types.some((t) => selectedPrefs.includes(t));
 
   // ── Build type lines with realism guidance ──────────────────
-  const typeLines: string[] = aiDecides
+  const typeLines: string[] = aiDecidesTypes
     ? [
         "All supported types may be used: true_false, multiple_choice, identification, matching, enumeration.",
         `Preferred types (if topic allows): ${selectedPrefs.map(formatTypeForDisplay).join(", ") || "any"}.`,
@@ -340,7 +179,7 @@ export const buildAiExamPrompt = (
     : selectedPrefs.map((t) => `- ${formatTypeForDisplay(t)}`);
 
   // ── Build realism table for selected types ──────────────────
-  const effectiveTypes: TemplateTypeSelection[] = aiDecides
+  const effectiveTypes: TemplateTypeSelection[] = aiDecidesTypes
     ? (Object.keys(EXAM_REALISM_DISTRIBUTION) as TemplateTypeSelection[])
     : selectedPrefs;
 
@@ -387,12 +226,16 @@ export const buildAiExamPrompt = (
     "- Explanations should be concise, factual, and directly tied to why the answer is correct.",
   );
 
-  const typeSectionHeader = aiDecides
-    ? "QUESTION TYPES (AI (YOU) DECIDES MIX AND COUNT)"
-    : "QUESTION TYPES TO USE (STRICT — DO NOT ADD OTHERS)";
+  const typeSectionHeader = aiDecidesTypes
+    ? aiDecidesCounts
+      ? "QUESTION TYPES (AI DECIDES MIX AND COUNT)"
+      : "QUESTION TYPES (AI DECIDES TYPES, COUNTS MUST FOLLOW YOUR CONSTRAINTS)"
+    : aiDecidesCounts
+      ? "QUESTION TYPES TO USE (FIXED TYPES, AI MAY ADJUST COUNTS)"
+      : "QUESTION TYPES TO USE (STRICT — DO NOT ADD OTHERS)";
 
-  // ── Assemble final prompt ───────────────────────────────────
-  return [
+  const blocks: string[] = [];
+  blocks.push(
     "ROLE",
     "You are an expert exam author generating production-ready exam JSON for the Mockly platform.",
     "Your exams are used as MOCK EXAMS for real academic subjects — they must mirror the structure, depth, and item counts of an actual professor-written exam, not a casual quiz.",
@@ -466,14 +309,9 @@ export const buildAiExamPrompt = (
     "",
     "STARTER TEMPLATE (REPLACE/EXPAND AS NEEDED)",
     stringifyTemplateExam(exam).trimEnd(),
-  ].join("\n");
+  );
+
+  return blocks.join("\n");
 };
 
-const TYPES_FOR_FALLBACK: TemplateTypeSelection[] = [
-  "true_false",
-  "multiple_choice",
-  "identification_no_choices",
-  "identification_with_choices",
-  "matching",
-  "enumeration",
-];
+const FALLBACK_TYPES = TYPES_FOR_FALLBACK as TemplateTypeSelection[];
