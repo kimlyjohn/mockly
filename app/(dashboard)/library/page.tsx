@@ -2,6 +2,15 @@ import Link from "next/link";
 import { FileUp } from "lucide-react";
 
 import { ExamLibraryItemMenu } from "@/components/dashboard/ExamLibraryItemMenu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/Button";
 import { listExamsPaginated } from "@/lib/server/dashboard-data";
@@ -57,81 +66,82 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
       <header>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">
+            <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-100">
               Exam Library
             </h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-1 max-w-2xl text-xs text-slate-600 sm:text-sm dark:text-slate-300">
               Browse and manage reusable exams. Start attempts from any saved
               exam.
             </p>
           </div>
-          <Link href="/library/import" className={buttonVariants()}>
+          <Link
+            href="/library/import"
+            className={buttonVariants({ size: "sm" })}
+          >
             <FileUp className="h-4 w-4" />
             Import Exams
           </Link>
         </div>
       </header>
 
-      <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-        <p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-sm text-slate-500 dark:text-slate-400">
+        <p className="shrink-0">
           Showing page {boundedPage} of {totalPages} ({total} exams)
         </p>
-        <div className="flex items-center gap-2">
-          {currentPage <= 1 ? (
-            <span className="rounded-lg border border-slate-200 px-3 py-1 text-slate-400 dark:border-slate-800 dark:text-slate-500">
-              Previous
-            </span>
-          ) : (
-            <Link
-              href={`/library?page=${currentPage - 1}`}
-              className="rounded-lg border border-slate-300 px-3 py-1 text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              Previous
-            </Link>
-          )}
-          {currentPage >= totalPages ? (
-            <span className="rounded-lg border border-slate-200 px-3 py-1 text-slate-400 dark:border-slate-800 dark:text-slate-500">
-              Next
-            </span>
-          ) : (
-            <Link
-              href={`/library?page=${currentPage + 1}`}
-              className="rounded-lg border border-slate-300 px-3 py-1 text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              Next
-            </Link>
-          )}
 
-          <div className="ml-1 flex items-center gap-1">
-            {pageItems.map((item, index) => {
-              if (item === "ellipsis") {
-                return (
-                  <span
-                    key={`ellipsis_${index}`}
-                    className="px-1 text-slate-400 dark:text-slate-500"
+        {totalPages > 1 && (
+          <div className="flex-1 overflow-x-auto pb-2 sm:pb-0">
+            <Pagination className="justify-start sm:justify-end">
+              <PaginationContent className="justify-start gap-1 sm:justify-end">
+                <PaginationItem>
+                  {currentPage <= 1 ? (
+                    <PaginationPrevious
+                      href="#"
+                      className="pointer-events-none opacity-50 cursor-not-allowed"
+                    />
+                  ) : (
+                    <PaginationPrevious
+                      href={`/library?page=${currentPage - 1}`}
+                    />
+                  )}
+                </PaginationItem>
+
+                {pageItems.map((item, index) => (
+                  <PaginationItem
+                    key={item === "ellipsis" ? `ellipsis-${index}` : item}
                   >
-                    ...
-                  </span>
-                );
-              }
+                    {item === "ellipsis" ? (
+                      <PaginationEllipsis />
+                    ) : (
+                      <PaginationLink
+                        href={`/library?page=${item}`}
+                        isActive={item === boundedPage}
+                        className={
+                          item === boundedPage
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-800/60 dark:bg-emerald-900/40 dark:text-emerald-100 dark:hover:bg-emerald-900/60"
+                            : ""
+                        }
+                      >
+                        {item}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ))}
 
-              const active = item === boundedPage;
-              return (
-                <Link
-                  key={item}
-                  href={`/library?page=${item}`}
-                  className={
-                    active
-                      ? "rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
-                      : "rounded-lg border border-slate-300 px-3 py-1 text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                  }
-                >
-                  {item}
-                </Link>
-              );
-            })}
+                <PaginationItem>
+                  {currentPage >= totalPages ? (
+                    <PaginationNext
+                      href="#"
+                      className="pointer-events-none opacity-50 cursor-not-allowed"
+                    />
+                  ) : (
+                    <PaginationNext href={`/library?page=${currentPage + 1}`} />
+                  )}
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="grid gap-3">
@@ -155,13 +165,22 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
             <div className="pointer-events-none relative z-20 flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  {exam.title}
+                  <span className="line-clamp-2 wrap-break-word">
+                    {exam.title}
+                  </span>
                 </h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                <p className="mt-1 line-clamp-3 text-sm text-slate-600 dark:text-slate-300">
                   {exam.description}
                 </p>
 
-                <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                  <Badge
+                    variant="outline"
+                    className="max-w-60 truncate px-2 py-0 text-[10px] uppercase tracking-[0.08em]"
+                    title={exam.subject ?? "General"}
+                  >
+                    {exam.subject ?? "General"}
+                  </Badge>
                   <span>{exam.totalQuestions} questions</span>
                   <span>Passing {exam.passingScore}%</span>
                   <span>{exam._count.attempts} attempts</span>
@@ -169,14 +188,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
                 </div>
               </div>
 
-              <div className="pointer-events-auto relative z-30 flex w-full items-center justify-end gap-2">
-                <Badge
-                  variant="outline"
-                  className="max-w-full truncate px-2 py-0 text-left text-[10px] uppercase tracking-[0.08em]"
-                  title={exam.subject ?? "General"}
-                >
-                  {exam.subject ?? "General"}
-                </Badge>
+              <div className="pointer-events-auto relative z-30 ml-auto flex shrink-0 items-start gap-2 self-start">
                 <ExamLibraryItemMenu
                   examId={exam.id}
                   title={exam.title}
