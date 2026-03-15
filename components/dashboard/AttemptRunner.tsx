@@ -300,26 +300,44 @@ export function AttemptRunner({ attemptId }: AttemptRunnerProps) {
   });
 
   if (loading) {
-    return <AttemptLoadingState />;
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-8">
+        <AttemptLoadingState />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <AttemptErrorState error={error} onRetry={() => void loadAttempt()} />
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-8">
+        <AttemptErrorState error={error} onRetry={() => void loadAttempt()} />
+      </div>
     );
   }
 
   if (!exam || !currentQuestion) {
-    return <Card>Attempt unavailable.</Card>;
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-8">
+        <Card>Attempt unavailable.</Card>
+      </div>
+    );
   }
 
   if (submitting) {
-    return <AttemptSubmittingState />;
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-8">
+        <AttemptSubmittingState />
+      </div>
+    );
   }
 
   if (attemptStatus === "submitted") {
     if (!activeGrade) {
-      return <Card>Loading results...</Card>;
+      return (
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-8">
+          <Card>Loading results...</Card>
+        </div>
+      );
     }
 
     return (
@@ -334,7 +352,18 @@ export function AttemptRunner({ attemptId }: AttemptRunnerProps) {
   }
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4 pb-4">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-8 space-y-4">
+        <header className="rounded-2xl border border-emerald-100/70 bg-linear-to-r from-emerald-50/80 via-cyan-50/60 to-slate-50/70 p-4 dark:border-emerald-900/50 dark:from-emerald-950/30 dark:via-cyan-950/20 dark:to-slate-900/40">
+          <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-100">
+            Attempt Session
+          </h1>
+          <p className="mt-1 max-w-2xl text-xs text-slate-600 sm:text-sm dark:text-slate-300">
+            Resume your attempt with autosave and submit when ready.
+          </p>
+        </header>
+      </div>
+
       <AttemptInProgressView
         exam={exam}
         currentQuestion={currentQuestion}

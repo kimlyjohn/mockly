@@ -53,7 +53,7 @@ export function AttemptInProgressView({
   onToggleFlag,
 }: AttemptInProgressViewProps) {
   return (
-    <section className="space-y-4">
+    <section className="mx-auto w-full max-w-6xl space-y-4 px-4 sm:px-8">
       <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
         <span>Time elapsed: {elapsedTimeText}</span>
         {saving && (
@@ -119,7 +119,7 @@ export function AttemptInProgressView({
             questions={questions.map((q) => ({ id: q.id, type: q.type }))}
             visible
             onJump={onJump}
-            className="w-full md:w-80 md:sticky md:top-4"
+            className="w-full md:w-80 md:sticky md:top-20"
           />
         </div>
       </div>

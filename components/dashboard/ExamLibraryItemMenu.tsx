@@ -1,6 +1,12 @@
 "use client";
 
-import { EllipsisVertical, Loader2, Pencil, Trash2 } from "lucide-react";
+import {
+  EllipsisVertical,
+  History,
+  Loader2,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -24,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ExamHistoryDialog } from "@/components/dashboard/ExamHistoryDialog";
 
 interface ExamLibraryItemMenuProps {
   examId: string;
@@ -39,6 +46,7 @@ export function ExamLibraryItemMenu({
   const router = useRouter();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -132,8 +140,9 @@ export function ExamLibraryItemMenu({
         >
           <EllipsisVertical className="h-4 w-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-48 min-w-48">
           <DropdownMenuItem
+            className="whitespace-nowrap"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -143,6 +152,18 @@ export function ExamLibraryItemMenu({
           >
             <Pencil className="h-4 w-4" />
             Edit
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setHistoryOpen(true);
+              setError(null);
+            }}
+          >
+            <History className="h-4 w-4" />
+            History Attempts
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -159,6 +180,13 @@ export function ExamLibraryItemMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <ExamHistoryDialog
+        examId={examId}
+        examTitle={title}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
 
       {/* Edit Dialog */}
       <Dialog

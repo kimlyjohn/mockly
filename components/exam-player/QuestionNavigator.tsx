@@ -73,7 +73,7 @@ export function QuestionNavigator({
       <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
         {answeredCount}/{total} answered, {flaggedIds.size} flagged
       </p>
-      <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+      <div className="max-h-[38vh] space-y-3 overflow-y-auto pr-1 md:max-h-[60vh]">
         {grouped.map((group) => (
           <section key={group.type} className="space-y-2">
             <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
