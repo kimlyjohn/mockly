@@ -20,6 +20,8 @@ const bodyFont = Manrope({
   subsets: ["latin"],
 });
 
+import { Providers } from "@/components/Providers";
+
 export const metadata: Metadata = {
   title: "Mockly",
   description:
@@ -58,7 +60,7 @@ export default async function RootLayout({
         className={`${displayFont.variable} ${bodyFont.variable} antialiased`}
       >
         <ThemeInitializer />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
