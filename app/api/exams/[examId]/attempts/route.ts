@@ -4,7 +4,7 @@ import {
   mapExamFromDb,
   statusFromDb,
 } from "@/lib/exam-mappers";
-import { fail, ok, readJson, zodFail } from "@/lib/http";
+import { fail, ok, readJson, serverFail, zodFail } from "@/lib/http";
 import { attemptInclude, examInclude } from "@/lib/query-shapes";
 import { startAttemptRequestSchema } from "@/lib/api-schema";
 
@@ -13,31 +13,40 @@ interface RouteContext {
 }
 
 export async function GET(_: Request, context: RouteContext) {
-  const { examId } = await context.params;
+  try {
+    const { examId } = await context.params;
 
-  const attempts = await db.attempt.findMany({
-    where: { examId },
-    orderBy: { createdAt: "desc" },
-    include: attemptInclude,
-  });
+    const attempts = await db.attempt.findMany({
+      where: { examId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: {
+          select: {
+            answers: true,
+          },
+        },
+      },
+    });
 
-  return ok(
-    attempts.map((attempt) => ({
-      id: attempt.id,
-      status: statusFromDb(attempt.status),
-      mode: attempt.mode,
-      currentQuestionIndex: attempt.currentQuestionIndex,
-      elapsedSeconds: attempt.elapsedSeconds,
-      submittedAt: attempt.submittedAt,
-      totalScore: attempt.totalScore,
-      maxScore: attempt.maxScore,
-      percentage: attempt.percentage,
-      flaggedQuestionIds: attempt.flags.map((flag) => flag.questionId),
-      answersCount: attempt.answers.length,
-      createdAt: attempt.createdAt,
-      updatedAt: attempt.updatedAt,
-    })),
-  );
+    return ok(
+      attempts.map((attempt) => ({
+        id: attempt.id,
+        status: statusFromDb(attempt.status),
+        mode: attempt.mode,
+        currentQuestionIndex: attempt.currentQuestionIndex,
+        elapsedSeconds: attempt.elapsedSeconds,
+        submittedAt: attempt.submittedAt,
+        totalScore: attempt.totalScore,
+        maxScore: attempt.maxScore,
+        percentage: attempt.percentage,
+        answersCount: attempt._count.answers,
+        createdAt: attempt.createdAt,
+        updatedAt: attempt.updatedAt,
+      })),
+    );
+  } catch (error) {
+    return serverFail(error, "Failed to load exam attempt history.");
+  }
 }
 
 export async function POST(request: Request, context: RouteContext) {
