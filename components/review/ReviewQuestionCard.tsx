@@ -124,7 +124,7 @@ const renderMatchingComparison = (
 
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 bg-slate-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+      <div className="hidden gap-2 bg-slate-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
         <span>Prompt</span>
         <span>Your answer</span>
         <span>Correct answer</span>
@@ -142,18 +142,49 @@ const renderMatchingComparison = (
           return (
             <div
               key={left}
-              className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-start gap-2 px-3 py-2 text-sm"
+              className="space-y-2 px-3 py-2 text-sm sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-start sm:gap-2 sm:space-y-0"
             >
-              <p className="font-medium text-slate-800 dark:text-slate-100">
+              <div className="sm:hidden">
+                <p className="font-medium text-slate-800 dark:text-slate-100">
+                  Prompt
+                </p>
+                <p className="text-slate-700 dark:text-slate-200">{left}</p>
+              </div>
+              <div className="sm:hidden">
+                <p className="font-medium text-slate-800 dark:text-slate-100">
+                  Your answer
+                </p>
+                <p className="text-slate-700 dark:text-slate-200">
+                  {userValue || "(No match)"}
+                </p>
+              </div>
+              <div className="sm:hidden">
+                <p className="font-medium text-slate-800 dark:text-slate-100">
+                  Correct answer
+                </p>
+                <p className="text-slate-700 dark:text-slate-200">
+                  {correctValue || "(No match)"}
+                </p>
+              </div>
+              <div className="sm:hidden">
+                <Badge variant={isCorrect ? "default" : "outline"}>
+                  {isCorrect ? "Correct" : "Mismatch"}
+                </Badge>
+              </div>
+
+              <p className="hidden font-medium text-slate-800 dark:text-slate-100 sm:block">
                 {left}
               </p>
-              <p className="text-slate-700 dark:text-slate-200">
+              <p className="hidden text-slate-700 dark:text-slate-200 sm:block">
                 {userValue || "(No match)"}
               </p>
-              <p className="text-slate-700 dark:text-slate-200">
+              <p className="hidden text-slate-700 dark:text-slate-200 sm:block">
                 {correctValue || "(No match)"}
               </p>
-              <Badge variant={isCorrect ? "default" : "outline"}>
+              <Badge
+                className="hidden sm:inline-flex"
+                variant={isCorrect ? "default" : "outline"}
+              >
                 {isCorrect ? "Correct" : "Mismatch"}
               </Badge>
             </div>
@@ -230,10 +261,10 @@ export function ReviewQuestionCard({
   return (
     <Card
       className={[
-        "space-y-3 border-2",
+        "space-y-5 border-2 p-5 transition-colors duration-300 sm:p-6",
         grade.isCorrect
-          ? "border-emerald-200 dark:border-emerald-900"
-          : "border-rose-200 dark:border-rose-900",
+          ? "border-emerald-200 bg-emerald-50/20 shadow-sm shadow-emerald-100/50 dark:border-emerald-900/60 dark:bg-emerald-950/10 dark:shadow-none"
+          : "border-rose-200 bg-rose-50/20 shadow-sm shadow-rose-100/50 dark:border-rose-900/60 dark:bg-rose-950/10 dark:shadow-none",
       ].join(" ")}
     >
       <div className="flex items-start justify-between gap-3">

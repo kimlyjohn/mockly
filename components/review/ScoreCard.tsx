@@ -52,10 +52,10 @@ export function ScoreCard({
   const isPassed = percentage >= passingScore;
 
   return (
-    <Card className="space-y-4">
+    <Card className="space-y-6 overflow-hidden border border-emerald-100/70 bg-linear-to-r from-emerald-50/80 via-cyan-50/60 to-slate-50/70 p-6 shadow-sm sm:p-8 dark:border-emerald-900/50 dark:from-emerald-950/30 dark:via-cyan-950/20 dark:to-slate-900/40">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl dark:text-slate-100">
             Submission Results
           </h2>
           <p className="text-slate-600 dark:text-slate-300">
