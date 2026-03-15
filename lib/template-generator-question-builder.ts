@@ -1,6 +1,17 @@
 import type { Question } from "@/types/exam";
 import type { TemplateTypeSelection } from "@/lib/template-generator";
 
+const shuffle = (values: string[]) => {
+  const next = [...values];
+
+  for (let index = next.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [next[index], next[randomIndex]] = [next[randomIndex], next[index]];
+  }
+
+  return next;
+};
+
 export const buildTemplateQuestion = (
   type: TemplateTypeSelection,
   id: string,
@@ -55,17 +66,19 @@ export const buildTemplateQuestion = (
   }
 
   if (type === "matching") {
+    const rightOptions = shuffle([
+      "TODO: Right item 1",
+      "TODO: Right item 2",
+      "TODO: Right item 3",
+    ]);
+
     return {
       id,
       type: "matching",
       prompt: "TODO: Match each left item to its correct right item.",
       options: {
         left: ["TODO: Left item 1", "TODO: Left item 2", "TODO: Left item 3"],
-        right: [
-          "TODO: Right item 1",
-          "TODO: Right item 2",
-          "TODO: Right item 3",
-        ],
+        right: rightOptions,
       },
       correctAnswer: {
         "TODO: Left item 1": "TODO: Right item 1",

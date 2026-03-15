@@ -41,22 +41,22 @@ export function QuestionTypeRules({
   onEnableAll,
   onResetAll,
 }: QuestionTypeRulesProps) {
+  if (aiDecidesTypes) {
+    return null;
+  }
+
   return (
     <div>
       <div className="mb-2 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium">Question Type Rules</p>
           <p className="text-xs text-muted-foreground">
-            Toggle types and optionally set per-type minimums in one place.
+            Select question types to include in the generated exam.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {aiDecidesTypes && aiDecidesCounts
-              ? "Enabled types are preferences; minimums are hard constraints if > 0."
-              : aiDecidesTypes
-                ? "AI can choose question types. Minimums still enforce required counts if > 0."
-                : aiDecidesCounts
-                  ? "Selected types are fixed. AI can still choose final counts within your minimum constraints."
-                  : "Enable at least one type. Minimums are hard constraints if > 0."}
+            {aiDecidesCounts
+              ? "AI will decide counts for selected question types."
+              : "Set exact question counts for selected types."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -72,10 +72,12 @@ export function QuestionTypeRules({
       <div className="grid gap-2 sm:grid-cols-2">
         {TYPES.map((item) => {
           const enabled = isTypeEnabled(item.key);
+          const showCountInput = enabled && !aiDecidesCounts;
+
           return (
             <div
               key={item.key}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm"
             >
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <Checkbox
@@ -90,30 +92,29 @@ export function QuestionTypeRules({
                   {item.label}
                 </Label>
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Min questions</span>
-                <Input
-                  type="number"
-                  min={0}
-                  max={200}
-                  value={minimumPerTypeInput[item.key]}
-                  className="h-7 w-20 px-2 text-xs"
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    onSetMinimumInput(item.key, raw);
-                    const parsed = Number.parseInt(raw, 10);
-                    if (Number.isFinite(parsed) && parsed > 0 && !enabled) {
-                      onSetTypeEnabled(item.key, true);
+
+              {showCountInput && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Question count</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={200}
+                    value={minimumPerTypeInput[item.key]}
+                    className="h-7 w-20 px-2 text-xs"
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      onSetMinimumInput(item.key, raw);
+                    }}
+                    onBlur={() =>
+                      onSetMinimumInput(
+                        item.key,
+                        String(Math.max(1, minimumPerType[item.key] ?? 1)),
+                      )
                     }
-                  }}
-                  onBlur={() =>
-                    onSetMinimumInput(
-                      item.key,
-                      String(minimumPerType[item.key] ?? 0),
-                    )
-                  }
-                />
-              </div>
+                  />
+                </div>
+              )}
             </div>
           );
         })}

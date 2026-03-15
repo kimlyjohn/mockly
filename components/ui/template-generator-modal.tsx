@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, Check, Copy, FileJson } from "lucide-react";
+import { Bot, Check, Copy, ExternalLink, FileJson } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import {
@@ -83,6 +83,17 @@ export function TemplateGeneratorModal({
 
     if (!enabled) {
       setMinimumPerTypeInput((prev) => ({ ...prev, [type]: "0" }));
+      return;
+    }
+
+    if (!aiDecidesCounts) {
+      setMinimumPerTypeInput((prev) => {
+        const existing = Number.parseInt(prev[type], 10);
+        return {
+          ...prev,
+          [type]: Number.isFinite(existing) && existing > 0 ? prev[type] : "1",
+        };
+      });
     }
   };
 
@@ -156,19 +167,58 @@ export function TemplateGeneratorModal({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl lg:max-w-4xl">
-        <DialogHeader className="flex-row items-center gap-2 border-b border-border px-6 py-4">
+      <DialogContent className="flex max-h-[92vh] w-full max-w-[calc(100%-1.25rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl lg:max-w-4xl">
+        <DialogHeader className="flex-row items-center gap-2 border-b border-border px-4 py-4 sm:px-6">
           <FileJson className="h-5 w-5 text-primary" />
           <DialogTitle>AI Exam Prompt Builder</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 overflow-y-auto px-6 py-5">
+        <div className="space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
           <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-100">
             <p className="font-medium">Quick flow</p>
             <p className="mt-1 text-xs text-emerald-800/90 dark:text-emerald-200/90">
               Copy AI prompt, paste into ChatGPT/Claude/Gemini with your
               sources, then paste the returned JSON in Import Exams.
             </p>
+
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <a
+                href="https://chatgpt.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-md border border-emerald-300/70 bg-white/70 px-2 py-1 text-emerald-900 hover:bg-white dark:border-emerald-800 dark:bg-slate-900/70 dark:text-emerald-200"
+              >
+                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-semibold text-white">
+                  G
+                </span>
+                ChatGPT
+                <ExternalLink className="h-3 w-3" />
+              </a>
+              <a
+                href="https://claude.ai"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-md border border-emerald-300/70 bg-white/70 px-2 py-1 text-emerald-900 hover:bg-white dark:border-emerald-800 dark:bg-slate-900/70 dark:text-emerald-200"
+              >
+                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-semibold text-white">
+                  C
+                </span>
+                Claude
+                <ExternalLink className="h-3 w-3" />
+              </a>
+              <a
+                href="https://gemini.google.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-md border border-emerald-300/70 bg-white/70 px-2 py-1 text-emerald-900 hover:bg-white dark:border-emerald-800 dark:bg-slate-900/70 dark:text-emerald-200"
+              >
+                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-semibold text-white">
+                  M
+                </span>
+                Gemini
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -204,7 +254,23 @@ export function TemplateGeneratorModal({
             <Checkbox
               id="ai-decides-counts"
               checked={aiDecidesCounts}
-              onCheckedChange={(v) => setAiDecidesCounts(!!v)}
+              onCheckedChange={(v) => {
+                const enabled = !!v;
+                setAiDecidesCounts(enabled);
+
+                if (!enabled) {
+                  setMinimumPerTypeInput((prev) => {
+                    const next = { ...prev };
+                    selected.forEach((type) => {
+                      const parsed = Number.parseInt(next[type], 10);
+                      if (!Number.isFinite(parsed) || parsed <= 0) {
+                        next[type] = "1";
+                      }
+                    });
+                    return next;
+                  });
+                }
+              }}
             />
             <Label
               htmlFor="ai-decides-counts"
@@ -241,48 +307,50 @@ export function TemplateGeneratorModal({
             />
           </div>
 
-          <QuestionTypeRules
-            aiDecidesTypes={aiDecidesTypes}
-            aiDecidesCounts={aiDecidesCounts}
-            isTypeEnabled={isTypeEnabled}
-            onSetTypeEnabled={setTypeEnabled}
-            minimumPerTypeInput={minimumPerTypeInput}
-            minimumPerType={minimumPerType}
-            onSetMinimumInput={(type, raw) =>
-              setMinimumPerTypeInput((prev) => ({
-                ...prev,
-                [type]: raw,
-              }))
-            }
-            onEnableAll={() =>
-              setSelected(
-                new Set<TemplateTypeSelection>([
-                  "true_false",
-                  "multiple_choice",
-                  "identification_no_choices",
-                  "identification_with_choices",
-                  "matching",
-                  "enumeration",
-                ]),
-              )
-            }
-            onResetAll={() => {
-              setSelected(new Set());
-              setMinimumPerTypeInput({
-                true_false: "0",
-                multiple_choice: "0",
-                identification_no_choices: "0",
-                identification_with_choices: "0",
-                matching: "0",
-                enumeration: "0",
-              });
-            }}
-          />
+          {!aiDecidesTypes && (
+            <QuestionTypeRules
+              aiDecidesTypes={aiDecidesTypes}
+              aiDecidesCounts={aiDecidesCounts}
+              isTypeEnabled={isTypeEnabled}
+              onSetTypeEnabled={setTypeEnabled}
+              minimumPerTypeInput={minimumPerTypeInput}
+              minimumPerType={minimumPerType}
+              onSetMinimumInput={(type, raw) =>
+                setMinimumPerTypeInput((prev) => ({
+                  ...prev,
+                  [type]: raw,
+                }))
+              }
+              onEnableAll={() =>
+                setSelected(
+                  new Set<TemplateTypeSelection>([
+                    "true_false",
+                    "multiple_choice",
+                    "identification_no_choices",
+                    "identification_with_choices",
+                    "matching",
+                    "enumeration",
+                  ]),
+                )
+              }
+              onResetAll={() => {
+                setSelected(new Set());
+                setMinimumPerTypeInput({
+                  true_false: "0",
+                  multiple_choice: "0",
+                  identification_no_choices: "0",
+                  identification_with_choices: "0",
+                  matching: "0",
+                  enumeration: "0",
+                });
+              }}
+            />
+          )}
 
           {feedback && <p className="text-sm text-primary">{feedback}</p>}
         </div>
 
-        <DialogFooter className="border-t border-border px-6 py-4">
+        <DialogFooter className="mx-0 flex-wrap border-t border-border px-4 py-4 sm:px-6">
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
